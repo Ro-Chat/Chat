@@ -11,7 +11,7 @@ local GCMDecrypt = syn and syn.crypt.decrypt or crypt and function(data, key, no
 local decodeb64 = syn and syn.crypt.base64.decode or crypt and crypt.base64decode
 local encodeb64 = syn and syn.crypt.base64.encode or crypt and crypt.base64encode
 
-local Import  = function(path) return loadstring(game:HttpGet(("https://raw.githubusercontent.com/Ro-Chat/Chat/main/v1/%s.lua"):format(path))).Body)() end
+local Import  = function(path) return loadstring(game:HttpGet(("https://raw.githubusercontent.com/Ro-Chat/Chat/main/v1/Modules/%s.lua"):format(path))).Body)() end
 local Utility = Import("Utility")
 local Image   = Import("Image")
 local UI      = Import("UI")
