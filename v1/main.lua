@@ -185,7 +185,7 @@ local Chat = {
     		if Emoji and self.Config.Emojis[Emoji] then
     		    WordLabel:Destroy()
     		    local EM = self.Config.Emojis[Emoji]
-    		    if EM.type == "Image" then
+    		    if EM.Type == "Image" then
         		    local ImgBuffer = EM.Url and game:HttpGet(EM.Url) or EM.Path and readfile(EM.Path)
         		    local Img = ImageLib.new(ImgBuffer)
         			local Image = Instance.new("ImageLabel", MessageContent)
@@ -193,14 +193,34 @@ local Chat = {
         			
         			Image.BackgroundTransparency = 1
         			Image.Size = UDim2.new(0, Img.WidthOffset * 18, 0, 18)
-        			writefile(Emoji .. ".png", ImgBuffer)
-        			Image.Image = GetAsset(Emoji .. ".png")
+        			writefile(Emoji .. "_tmp.png", ImgBuffer)
+        			Image.Image = GetAsset(Emoji .. "_tmp.png")
         			task.spawn(function()
         			    task.wait(0.25)
-        			    delfile(Emoji .. ".png")
+        			    delfile(Emoji .. "_tmp.png")
         			end)
     		    end
-			    if EM.type == "Video" then
+			    if EM.Type == "Video" then
+        		    local Buffer = EM.Url and game:HttpGet(EM.Url) or EM.Path and readfile(EM.Path)
+        		    writefile(Emoji .. "_tmp.webm", Buffer)
+
+			        local VideoFrame = Instance.new("VideoFrame", MessageContent)
+			        
+			        VideoFrame.Video = GetAsset(Emoji .. "_tmp.webm")
+			        repeat task.wait() until VideoFrame.IsLoaded
+			        VideoFrame.LayoutOrder = #MessageContent:GetChildren()
+			        VideoFrame.BackgroundTransparency = 1
+			        local Resolution = VideoFrame.Resolution
+			        local Offset = Resolution.X / Resolution.Y
+			        VideoFrame.Size = UDim2.new(0, Offset * 18, 0, 18)
+			        VideoFrame.Looped = true
+			        VideoFrame:Play()
+			        
+			        
+			        task.spawn(function()
+			            task.wait(0.25)
+			            delfile(Emoji .. "_tmp.webm")
+			        end)
 			        
 			    end
     		end
@@ -229,7 +249,7 @@ Chat.ScrollingFrame = Players.LocalPlayer.PlayerGui.Chat.Frame.ChatChannelParent
 local Config = Chat:LoadConfig()
 
 Chat:CreateMessage({
-    Message = "test *wow* :troll: Emojiojsw dwmdwa jwodojsw dwmdwa jwodojsw dwmdwa jwodojsw dwmdwa jwodojsw dwmdwa jwodojsw dwmdwa jwod",
+    Message = "test *wow* :troll: Emojiojsw :pepe_cringe: dwmdwa jwodojsw dwmdwa jwodojsw dwmdwa jwodojsw dwmdwa jwodojsw dwmdwa jwodojsw dwmdwa jwod",
     Name = "Test",
     Color = {
         100,
