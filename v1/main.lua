@@ -13,11 +13,8 @@ local encodeb64 = syn and syn.crypt.base64.encode or crypt and crypt.base64encod
 
 local Import  = function(path) return loadstring(game:HttpGet(("https://raw.githubusercontent.com/Ro-Chat/Chat/main/v1/%s.lua"):format(path))).Body)() end
 local Utility = Import("Utility")
-local 
-
-
-local Image = loadstring(game:HttpGet("https://pastebin.com/raw/9vdb5LW8"))()
-local UI    = loadstring(game:HttpGet("https://pastebin.com/raw/b9hhzxGK"))()
+local Image   = Import("Image")
+local UI      = Import("UI")
 
 local Embed    = UI.Embed
 local Interact = UI.Interact
