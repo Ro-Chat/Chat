@@ -21,14 +21,24 @@ For an image you'll need to use the following JSON.
 	"Url": "https://google.com/emoji.png"
 }
 ```
-For a video you'll need to convert whatever file you're using like GIF or MP4 to a WEBM format then you'll need to use the following JSON.
-<sub> I personally use [this](https://cloudconvert.com/gif-to-webm) website to convert GIFs <sub>
+For a video you'll need to convert the GIF or MP4 into images. I'd use [ImageMagick](https://imagemagick.org/) for that make sure to install legacy so you install convert.
+
+`convert PATH_TO_GIF.gif FRAMES_PATH%03d.png`
 
  ```json
 "Emoji_Name": {
 	"Type": "Video",
-	"Path": "emoji.webm",
-	"Url": "https://google.com/emoji.webm"
+	"Frames": [
+	  "frame000.png",
+	  "frame001.png",
+	  "frame002.png",
+	  "frame003.png",
+	  "frame004.png",
+	  "frame005.png",
+	  "frame006.png",
+	  "frame007.png",
+	],
+	"FPS": 20
 }
 ```
 ## Embeds
