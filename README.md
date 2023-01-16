@@ -24,6 +24,7 @@ For an image you'll need to use the following JSON.
 For a video you'll need to convert the GIF or MP4 into images. I'd use [ImageMagick](https://imagemagick.org/) for that make sure to install legacy so you install convert.
 
 run this command after install **ImageMagick** `convert PATH_TO_GIF.gif FRAMES_PATH%03d.png`
+after running the extracting the frames from the GIF you'll need to put the images in `RoChat/Emojis`
 
  ```json
 "Emoji_Name": {
