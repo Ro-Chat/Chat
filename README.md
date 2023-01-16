@@ -11,7 +11,7 @@ To add an emoji without using any tools you'll have to open the proper profile f
 To make a proper emoji for **V1** you'll have to make a JSON using these formats.
 
 ---
-### P.S. you'll only need to use Path or Url not both.
+* P.S. you'll only need to use Path or Url not both.
 For a image you'll need to use the following JSON.
 ```json
 "Emoji_Name": {
