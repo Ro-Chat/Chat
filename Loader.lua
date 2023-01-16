@@ -41,8 +41,7 @@ getgenv().ROCHAT_Config = {
  
  makeDirectories({
      "Profiles",
-     "Emojis",
-     "Versions"
+     "Emojis"
  })
  
  local ProfilePath = ("RoChat/Profiles/%s_profile.json"):format(ROCHAT_Config.Version)
@@ -59,10 +58,9 @@ getgenv().ROCHAT_Config = {
                      Url = "",
                      Type = "Image"
                  },
-             
              }
          }
      end
  end
- 
- loadstring(readfile(Path .. "Versions" .. ROCHAT_Config.Version .. "/Main.lua"))()(Release)
+
+ loadstring(readfile(Path .. "Versions/" .. ROCHAT_Config.Version .. "/Main.lua"))()(Release)
