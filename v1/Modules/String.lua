@@ -54,11 +54,70 @@ String.new = function(str)
     end
     
     return setmetatable(string, {
-        __call = function(self, str)
-            if str then
-               string.string = str
-            end
-            return string.string
+    __call = function(self, str)
+        if str then
+           self.string = str
         end
-    })
+        return self.string
+    end,
+  __index = function(self, prop)
+     if not prop then return self.string end
+     local Property = rawget(self, prop)
+     if Property then return Property end
+     self.string = tostring(prop)
+     
+     return self.string
+  end,
+  __add = function(self, val)
+    self.string = self.string .. tostring(val)
+    return self.string
+  end,
+  __sub = function(self, val)
+    self.string = self.string:sub(1, utf8.offset(self.string, #self.string - val))
+    return self.string
+  end,
+  __div = function(self, val)
+    local result = {}
+    for i = 1, #self.string, val do
+        table.insert(result, self.string:sub(i, i + val - 1))
+    end
+    return result
+  end,
+  __concat = function(self, val)
+      self.string = self.string .. val
+      return self.string
+  end,
+  __mul = function(self, val)
+      for i = 1, val do
+          self.string = self.string .. self.string
+      end
+      return self.string
+  end,
+  __pow = function(self, val)
+      -- I have a small brain so this is good enough
+      for i = 1, val do
+          for i = 1, val do
+              self.string = self.string .. self.string
+          end
+          self.string = self.string .. self.string
+      end
+      return self.string
+  end,
+  __mod = function(self, val)
+    -- Same as divide because why not
+    local result = {}
+    for i = 1, #self.string, val do
+        table.insert(result, self.string:sub(i, i + val - 1))
+    end
+    return result
+  end,
+  __tostring = function(self)
+      return self.string
+  end,
+  __len = function(self)
+      return #self.string
+  end
+})
 end
+
+return String
