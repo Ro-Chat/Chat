@@ -1,18 +1,3 @@
-function createbin(val, str)
-    if ( val / 2 ) < 1 then
-        return (str..math.ceil( val / 2 )):reverse();
-    end
-    
-    val = val / 2;
-    str = str..math.ceil(( val - math.floor(val) ));
-    return createbin(math.floor(val), str);
-end
-
-function ConvertBinary(val)
-    return createbin(val, "");
-end
-
-
 local Bit = {}
 local bitMT = {__mode = "k", __type="bit",__index = Bit}
 local Bit = setmetatable(Bit, bitMT)
@@ -65,6 +50,19 @@ Bytes.new = function(Binary)
     return bytes
 end
 
+local function createbin(val, str)
+    if ( val / 2 ) < 1 then
+        return (str..math.ceil( val / 2 )):reverse();
+    end
+    
+    val = val / 2;
+    str = str..math.ceil(( val - math.floor(val) ));
+    return createbin(math.floor(val), str);
+end
+
+function ConvertBinary(val)
+    return createbin(val, "");
+end
 
 local Binary = {}
 local binaryMT = {__mode = "k", __type = "binary", __index = Binary,

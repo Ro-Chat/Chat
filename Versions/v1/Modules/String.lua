@@ -44,7 +44,7 @@ String.new = function(str)
         
         for i = 1, #string.string do
             if string.string:sub(i, i + #str - 1) == str then
-                found_amount += 1
+                found_amount = found_amount + 1
                 table.insert(positions, i)
                 if found_amount >= amount then break end
             end

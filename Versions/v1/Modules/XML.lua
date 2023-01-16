@@ -26,17 +26,18 @@ end
 local XML = {
     Parse = function(self, txt)
         local Data = {}
-        ElementCounter = 0 
-        for i = 2,#txt:split("<") do
+        local ElementCounter = 0
+        
+        for i = 2, #txt:split("<") do
             local Str = txt:split("<")[i]
             local Element = Str:split(" ")[1] and Str:split(" ")[1]:split(">")[1] or Str:split(" ")[1] or Str:split(">")[1]
             if not Element:match("/") then
-                   ElementCounter = ElementCounter + 1
-                   local Attributes = get_attributes(Str)
-                   Attributes.Text = Str:match(">(.+)") and Str:match(">(.+)"):gsub("\n", "") or Str:match(">(.+)")
-                   Attributes.Tag = Element
-                   Attributes.XML = Str
-                   table.insert(Data, Attributes)
+                ElementCounter = ElementCounter + 1
+                local Attributes = get_attributes(Str)
+                Attributes.Text = Str:match(">(.+)") and Str:match(">(.+)"):gsub("\n", "") or Str:match(">(.+)")
+                Attributes.Tag = Element
+                Attributes.XML = Str
+                table.insert(Data, Attributes)
             end
         end
      
