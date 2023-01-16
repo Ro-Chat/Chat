@@ -22,7 +22,7 @@ For an image you'll need to use the following JSON.
 }
 ```
 For a video you'll need to convert whatever file you're using like GIF or MP4 to a WEBM format then you'll need to use the following JSON.
-<sub>I personally use [this](https://cloudconvert.com/gif-to-webm) website to convert GIFs <sub>
+<sub> I personally use [this](https://cloudconvert.com/gif-to-webm) website to convert GIFs <sub>
 
  ```json
 "Emoji_Name": {
