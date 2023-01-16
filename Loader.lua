@@ -15,56 +15,59 @@
 --  888       o 888   888 d8(  888  888   888  888    .o  888         --
 -- o888ooooood8 `Y8bod8P' `Y888""8o `Y8bod88P" `Y8bod8P' d888b        --
 ------------------------------------------------------------------------
--- Version: 0.0.1                                                     --
-------------------------------------------------------------------------   
+-- Version: 0.0.1  |                                                  --
+------------------------------------------------------------------------
+
+
+
 
 getgenv().ROCHAT_Config = {
     WSS = "wss://WS-Server.eeeeeevbr.repl.co",
     Version = "v1",
- }
- 
- local HttpService = game:GetService("HttpService")
- 
- local Release = debug.getinfo(2)
- local Path    = Release and "https://raw.githubusercontent.com/Ro-Chat/Chat/main/" or "RoChat/"
- 
- -- Directory Structure
- 
- function makeDirectories(dirs)
-     if not isfolder("RoChat") then
-         makefolder("RoChat")
-     end
-     for i, dir in next, dirs do
-         makefolder("RoChat/" .. dir)
-     end
- end
- 
- makeDirectories({
-     "Profiles",
-     "Emojis",
-     "Versions",
-     "Embeds"
- })
- 
- local ProfilePath = ("RoChat/Profiles/%s_profile.json"):format(ROCHAT_Config.Version)
- 
- if isfile(ProfilePath) then
-     ROCHAT_Config.Profile = HttpService:JSONDecode(readfile(ProfilePath))
- else
-     if ROCHAT_Config.Version == "v1" then
-         local Profile = {
-             Name = game.Players.LocalPlayer.DisplayName,
-             Color = {math.random(50, 150), math.random(50, 150), math.random(50, 150)},
-             Emojis = {
-                 troll = {
-                     Url = "https://raw.githubusercontent.com/Ro-Chat/Chat/main/Emojis/troll.png",
-                     Type = "Image"
-                 }
-             }
-         }
-         ROCHAT_Config.Profile = Profile
-         writefile(ProfilePath, HttpService:JSONEncode(ROCHAT_Config.Profile))
-     end
- end
- 
- loadstring(readfile(Path .. "Versions/" .. ROCHAT_Config.Version .. "/Main.lua"))()(Release)
+}
+
+local HttpService = game:GetService("HttpService")
+
+local Release = debug.getinfo(2)
+local Path    = Release and "https://raw.githubusercontent.com/Ro-Chat/Chat/main/" or "RoChat/"
+
+-- Directory Structure
+
+function makeDirectories(dirs)
+    if not isfolder("RoChat") then
+        makefolder("RoChat")
+    end
+    for i, dir in next, dirs do
+        makefolder("RoChat/" .. dir)
+    end
+end
+
+makeDirectories({
+    "Profiles",
+    "Emojis",
+    "Versions",
+    "Embeds"
+})
+
+local ProfilePath = ("RoChat/Profiles/%s_profile.json"):format(ROCHAT_Config.Version)
+
+if isfile(ProfilePath) then
+    ROCHAT_Config.Profile = HttpService:JSONDecode(readfile(ProfilePath))
+else
+    if ROCHAT_Config.Version == "v1" then
+        local Profile = {
+            Name = game.Players.LocalPlayer.DisplayName,
+            Color = {math.random(50, 150), math.random(50, 150), math.random(50, 150)},
+            Emojis = {
+                troll = {
+                    Url = "https://raw.githubusercontent.com/Ro-Chat/Chat/main/Emojis/troll.png",
+                    Type = "Image"
+                }
+            }
+        }
+        ROCHAT_Config.Profile = Profile
+        writefile(ProfilePath, HttpService:JSONEncode(ROCHAT_Config.Profile))
+    end
+end
+
+loadstring(readfile(Path .. "Versions/" .. ROCHAT_Config.Version .. "/Main.lua"))()(Release)
