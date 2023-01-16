@@ -1,3 +1,5 @@
+local Int = Import("Int")
+local String = Import("String")
 local Image = {}
 
 function Image.new(data)
