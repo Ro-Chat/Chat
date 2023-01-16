@@ -1,5 +1,5 @@
 local Int = Import("Int")
-local 
+local Binary = Import("Binary")
 
 local String = {}
 
