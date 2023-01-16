@@ -1,4 +1,6 @@
-local Import  = function(path) return loadstring(game:HttpGet(("https://raw.githubusercontent.com/Ro-Chat/Chat/main/v1/Modules/%s.lua"):format(path)))() end
+local ModulePath = debug.getinfo(2) and "https://raw.githubusercontent.com/Ro-Chat/Chat/main/v1/Modules" or "Chat/v1/Modules"
+
+getgenv().Import  = function(path) return loadstring(game:HttpGet(("%s/%s.lua"):format(ModulePath, path)))() end
 
 local Chat = Import("Chat")
 
