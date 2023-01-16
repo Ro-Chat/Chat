@@ -12,6 +12,7 @@ To make a proper emoji for **V1** you'll have to make a JSON using these formats
 
 ---
 * P.S. you'll only need to use Path or Url not both.
+
 For a image you'll need to use the following JSON.
 ```json
 "Emoji_Name": {
