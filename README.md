@@ -67,7 +67,7 @@ Creates a **TextBox** in the embed frame for user input.
 ```
 
 ## TextLabel
-Creates a **TextLabel** in the embed frame for user input.
+Creates a **TextLabel** in the embed frame.
 ### Properties
 ---
 * OnHover `function`: Returns/sets the function for whenever the **TextLabel** is hovered over.
@@ -80,7 +80,7 @@ Creates a **TextLabel** in the embed frame for user input.
 <textlabel color="255, 0, 0">TextLabel Example</textlabel>
 ```
 ## ImageLabel
-Creates a **ImageLabel** in the embed frame for user input.
+Creates a **ImageLabel** in the embed frame.
 ### Properties
 ---
 * OnHover `function`: Returns/sets the function for whenever the **ImageLabel** is hovered over.
