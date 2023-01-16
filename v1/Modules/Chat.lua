@@ -1,5 +1,4 @@
-local Import  = function(path) return loadstring(game:HttpGet(("https://raw.githubusercontent.com/Ro-Chat/Chat/main/v1/Modules/%s.lua"):format(path)))() end
-local ImageLib   = Import("Image")
+local ImageLib = Import("Image")
 local GetAsset = syn and getsynasset or getcustomasset
 
 local HttpService = game:GetService("HttpService")
