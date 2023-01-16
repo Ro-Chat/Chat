@@ -1,3 +1,6 @@
+local Int = Import("Int")
+local 
+
 local String = {}
 
 String.ImageToLines = function(image_class, font_size)
@@ -51,7 +54,10 @@ String.new = function(str)
     end
     
     return setmetatable(string, {
-        __call = function(self, ...)
+        __call = function(self, str)
+            if str then
+               string.string = str
+            end
             return string.string
         end
     })
