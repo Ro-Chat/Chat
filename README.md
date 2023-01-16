@@ -91,4 +91,4 @@ Creates a **ImageLabel** in the embed frame for user input.
 <imagelabel color="255, 0, 0"></imagelabel>
 ```
 
-I will add the other shit later I'm just busy.
+I will add the other shit later I'm lazy rn
