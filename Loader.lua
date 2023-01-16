@@ -19,14 +19,14 @@
 ------------------------------------------------------------------------   
 
 getgenv().ROCHAT_Config = {
-    WSS = "",
+    WSS = "wss://WS-Server.eeeeeevbr.repl.co",
     Version = "v1",
  }
  
  local HttpService = game:GetService("HttpService")
  
  local Release = debug.getinfo(2)
- local Path    = Release and "https://raw.githubusercontent.com/Ro-Chat/Chat/main/" or "Chat/"
+ local Path    = Release and "https://raw.githubusercontent.com/Ro-Chat/Chat/main/" or "RoChat/"
  
  -- Directory Structure
  
@@ -41,7 +41,9 @@ getgenv().ROCHAT_Config = {
  
  makeDirectories({
      "Profiles",
-     "Emojis"
+     "Emojis",
+     "Versions",
+     "Embeds"
  })
  
  local ProfilePath = ("RoChat/Profiles/%s_profile.json"):format(ROCHAT_Config.Version)
@@ -55,12 +57,14 @@ getgenv().ROCHAT_Config = {
              Color = {math.random(50, 150), math.random(50, 150), math.random(50, 150)},
              Emojis = {
                  troll = {
-                     Url = "",
+                     Url = "https://raw.githubusercontent.com/Ro-Chat/Chat/main/Emojis/troll.png",
                      Type = "Image"
-                 },
+                 }
              }
          }
+         ROCHAT_Config.Profile = Profile
+         writefile(ProfilePath, HttpService:JSONEncode(ROCHAT_Config.Profile))
      end
  end
-
+ 
  loadstring(readfile(Path .. "Versions/" .. ROCHAT_Config.Version .. "/Main.lua"))()(Release)

@@ -1,40 +1,10 @@
-local ImageLib = Import("Image")
-local GetAsset = syn and getsynasset or getcustomasset
+local EmojiLib = Import("Emoji")
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 
 local Chat = {
     ScrollingFrame = nil,
-    Config = {},
-    LoadConfig = function(self)
-        if not isfolder("RoChat") then
-            makefolder("RoChat")
-            makefolder("RoChat/Emojis")
-        end
-        if not isfile("RoChat/Config.json") then
-            local Config = {
-                Name = Players.LocalPlayer.Name,
-                Color = {math.random(50, 255), math.random(50, 255), math.random(50, 255)},
-                Emojis = {
-                    troll = {
-                        Url = "https://discords.com/_next/image?url=https%3A%2F%2Fcdn.discordapp.com%2Femojis%2F702893572369809409.png%3Fv%3D1&w=64&q=75",
-                        Type = "Image"
-                    },
-                    pepe_cringe = {
-                        Path = "pepe_cringe.webm",
-                        Type = "Video"
-                    }
-                },
-            }
-            writefile("RoChat/Config.json", HttpService:JSONEncode(Config))
-            self.Config = Config
-            return Config
-        end
-        local Config = HttpService:JSONDecode(readfile("RoChat/Config.json"))
-        self.Config = Config
-        return Config
-    end,
     Markdown = function(message, flags)
     	local left_string = ""
     	local right_string = ""
@@ -181,47 +151,9 @@ local Chat = {
     		WordLabel.TextSize = 18
     		WordLabel.Size = UDim2.new(0, WordLabel.TextBounds.X, 0, WordLabel.TextBounds.Y)
     		
-    		if Emoji and self.Config.Emojis[Emoji] then
+    		if Emoji and ROCHAT_Config.Profile.Emojis[Emoji] then
     		    WordLabel:Destroy()
-    		    local EM = self.Config.Emojis[Emoji]
-    		    if EM.Type == "Image" then
-        		    local ImgBuffer = EM.Url and game:HttpGet(EM.Url) or EM.Path and readfile(EM.Path)
-        		    local Img = ImageLib.new(ImgBuffer)
-        			local Image = Instance.new("ImageLabel", MessageContent)
-        			Image.LayoutOrder = #MessageContent:GetChildren()
-        			
-        			Image.BackgroundTransparency = 1
-        			Image.Size = UDim2.new(0, Img.WidthOffset * 18, 0, 18)
-        			writefile(Emoji .. "_tmp.png", ImgBuffer)
-        			Image.Image = GetAsset(Emoji .. "_tmp.png")
-        			task.spawn(function()
-        			    task.wait(0.25)
-        			    delfile(Emoji .. "_tmp.png")
-        			end)
-    		    end
-			    if EM.Type == "Video" then
-        		    local Buffer = EM.Url and game:HttpGet(EM.Url) or EM.Path and readfile(EM.Path)
-        		    writefile(Emoji .. "_tmp.webm", Buffer)
-
-			        local VideoFrame = Instance.new("VideoFrame", MessageContent)
-			        
-			        VideoFrame.Video = GetAsset(Emoji .. "_tmp.webm")
-			        repeat task.wait() until VideoFrame.IsLoaded
-			        VideoFrame.LayoutOrder = #MessageContent:GetChildren()
-			        VideoFrame.BackgroundTransparency = 1
-			        local Resolution = VideoFrame.Resolution
-			        local Offset = Resolution.X / Resolution.Y
-			        VideoFrame.Size = UDim2.new(0, Offset * 18, 0, 18)
-			        VideoFrame.Looped = true
-			        VideoFrame:Play()
-			        
-			        
-			        task.spawn(function()
-			            task.wait(0.25)
-			            delfile(Emoji .. "_tmp.webm")
-			        end)
-			        
-			    end
+    		    EmojiLib.MakeEmoji(MessageContent, Emoji)
     		end
     		
     		if Word:match("__$") then

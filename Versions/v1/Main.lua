@@ -12,7 +12,8 @@ return function(Release)
         end)
 
         if not status then
-            error(path, "casued an error", result)
+            warn(path, "caused an error.")
+            warn(result)
         end
 
         return result
@@ -29,10 +30,8 @@ return function(Release)
 
     Chat.ScrollingFrame = Players.LocalPlayer.PlayerGui.Chat.Frame.ChatChannelParentFrame.Frame_MessageLogDisplay.Scroller
 
-    local Config = Chat:LoadConfig()
-
     Chat:CreateMessage({
-        Message = "test *wow* :troll: Emojiojsw :pepe_cringe: dwmdwa jwodojsw dwmdwa jwodojsw dwmdwa jwodojsw dwmdwa jwodojsw dwmdwa jwodojsw dwmdwa jwod",
+        Message = "test *wow* :troll: :robux: :robux: :robux: :robux: :blob: :blob: :blob: __~~Emojiojsw~~__ :pepe_cringe: dwmdwa jwodojsw dwmdwa jwodojsw dwmdwa jwodojsw dwmdwa jwodojsw dwmdwa jwodojsw dwmdwa jwod",
         Name = "Test",
         Color = {
             100,
