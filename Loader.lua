@@ -18,14 +18,6 @@
 -- Version: 0.0.1  |                                                  --
 ------------------------------------------------------------------------
 
-
-
-
-getgenv().ROCHAT_Config = {
-    WSS = "wss://WS-Server.eeeeeevbr.repl.co",
-    Version = "v1",
-}
-
 local HttpService = game:GetService("HttpService")
 
 local Release = debug.getinfo(2)
