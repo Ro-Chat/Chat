@@ -4,6 +4,7 @@ local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 
 local Chat = {
+	Players = {},
     ScrollingFrame = nil,
     Markdown = function(message, flags)
     	local left_string = ""
@@ -43,9 +44,9 @@ local Chat = {
     CreateMessage = function(self, data)
         local ScrollingFrame = self.ScrollingFrame
         local Frame = Instance.new("Frame", ScrollingFrame)
-        
+        Frame.LayoutOrder = #ScrollingFrame:GetChildren() - 1
         Frame.BackgroundTransparency = 1
-        Frame.Size = UDim2.new(1, 0, 0, 18)
+        Frame.Size = UDim2.new(1, 0, 0, 22)
         
         local NameTag = Instance.new("TextButton", Frame)
         NameTag.Text = ("[%s]:"):format(data.Name)
@@ -61,8 +62,8 @@ local Chat = {
         local MessageContent = Instance.new("ScrollingFrame", Frame)
     	MessageContent.BackgroundTransparency = 1
     	MessageContent.Position = UDim2.new(0, 12 + TextSize.x, 0, 0)
-    	MessageContent.Size = UDim2.new(0, Frame.AbsoluteSize.X - TextSize.X, 0, 18)
-    	MessageContent.CanvasSize = UDim2.new(0, Frame.AbsoluteSize.X - TextSize.X, 0, 18)
+    	MessageContent.Size = UDim2.new(0, Frame.AbsoluteSize.X - TextSize.X, 0, 22)
+    	MessageContent.CanvasSize = UDim2.new(0, Frame.AbsoluteSize.X - TextSize.X, 0, 22)
     
     	local UIListLayout = Instance.new("UIListLayout", MessageContent)
     	UIListLayout.FillDirection = Enum.FillDirection.Horizontal
@@ -105,19 +106,21 @@ local Chat = {
     		WordLabel.LayoutOrder = #MessageContent:GetChildren()
     		WordLabel.BackgroundTransparency = 1
     		
-    		if Word:match("^@") then
-    			local Name = Word:match("^@([%w%p]+)")
-    			if Name == data.Name then
-    				local Color = Color3.fromRGB(unpack(data.Color))
-    				WordLabel.TextColor3 = Color
-    				Instance.new("UICorner", WordLabel).CornerRadius = UDim.new(0, 3)
-    				WordLabel.BackgroundTransparency = 0.75
-    				WordLabel.BackgroundColor3 = Color
-    			end
-    		end
-    		
     		--> Set text
     		local RichWord, Word = self.Markdown(Word, Flags)
+			
+			if RichWord:match("^@") then
+    			local Name = RichWord:match("^@([%w%p]+)")
+				for i, v in next, self.Players do
+					if v.Name == Name then
+						local Color = Color3.fromRGB(unpack(v.Color or v.Colour))
+						WordLabel.TextColor3 = Color
+						Instance.new("UICorner", WordLabel).CornerRadius = UDim.new(0, 3)
+						WordLabel.BackgroundTransparency = 0.75
+						WordLabel.BackgroundColor3 = Color
+					end
+				end
+    		end
     		WordLabel.Text = RichWord
     		
     		--> Check if word goes outside of the line
@@ -125,16 +128,16 @@ local Chat = {
     			
     			--> Add another line to the main frame
     			MessageContent = Instance.new("ScrollingFrame", Frame)
-    			MessageContent.Position = UDim2.new(0, 8, 0, Lines * 18)
+    			MessageContent.Position = UDim2.new(0, 8, 0, Lines * 22)
     			
     			Lines = Lines + 1
-    			Frame.Size = UDim2.new(1, 0, 0, (Lines * 18))
+    			Frame.Size = UDim2.new(1, 0, 0, (Lines * 22))
     			
     			--> Create a new line
     			
     			MessageContent.BackgroundTransparency = 1
-    			MessageContent.Size = UDim2.new(1, 0, 0, 18)
-    			MessageContent.CanvasSize = UDim2.new(0, 0, 0, 18)
+    			MessageContent.Size = UDim2.new(1, 0, 0, 22)
+    			MessageContent.CanvasSize = UDim2.new(0, 0, 0, 22)
     			
     			UIListLayout = Instance.new("UIListLayout", MessageContent)
     			UIListLayout.FillDirection = Enum.FillDirection.Horizontal

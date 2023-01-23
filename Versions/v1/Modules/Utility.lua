@@ -10,10 +10,8 @@ local Request   = syn and syn.request or http and http.request
 local WebSocket = syn and syn.websocket or WebSocket
 local GetAsset  = syn and getsynasset or getcustomasset
 
-local Properties = HttpService:JSONDecode(game:HttpGet("https://pastebin.com/raw/NkLMfdDu"))
-
 function Utility:JSON(val)
-  if typeof(val) == "string" then
+  if type(val) == "string" then
       return HttpService:JSONDecode(val)
   end
   return HttpService:JSONEncode(val)
@@ -29,22 +27,25 @@ function Utility:Client(data)
       RecieveConnection = nil,
       CloseConnection   = nil
   }
-  
+
   function Client:Send(value)
+      if type(value) == "table" then
+        value = Utility:JSON(value)
+      end
       value = tostring(value)
       Client.Client:Send(value)
   end
-  
+
   function Client:OnRecieve(func)
       if Client.RecieveConnection then Client.RecieveConnection:Disconnect() end
       Client.RecieveConnection = Client.Client.OnMessage:Connect(func)
   end
-  
+
   function Client:OnClose(func)
       if Client.CloseConnection then Client.CloseConnection:Disconnect() end
       Client.CloseConnection = Client.Client.OnClose:Connect(func)
   end
-  
+
   function Client:Close()
       if Client.RecieveConnection then Client.RecieveConnection:Disconnect() end
       Client.Client:Close()
@@ -54,7 +55,14 @@ function Utility:Client(data)
       Client.CloseConnection = nil
       Client.Client = nil
   end
-  
+
+  Client:Send({
+    Type = "Connection",
+    SubType = "Join",
+    Name = ROCHAT_Config.Profile.Name,
+    Color = ROCHAT_Config.Profile.Color or ROCHAT_Config.Profile.Colour,
+  })
+
   return Client
 end
 
