@@ -5,6 +5,15 @@
 ## Emojis
 To add an emoji without using any tools you'll have to open the proper profile file in `RoChat/Profiles/` for the version you're using and insert the JSON that you'll create in the emoji list. 
 
+```lua
+getgenv().ROCHAT_Config = {
+    WSS = "wss://WS-Server.eeeeeevbr.repl.co",
+    Version = "v1",
+}
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Ro-Chat/Chat/main/Loader.lua"))()
+```
+
 ---
 
 ### V1 
