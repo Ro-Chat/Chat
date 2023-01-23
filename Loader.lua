@@ -62,4 +62,4 @@ else
     end
 end
 
-loadstring(Release and readfile(Path .. "Versions/" .. ROCHAT_Config.Version .. "/Main.lua") or game:HttpGet(Path .. "Versions/" .. ROCHAT_Config.Version .. "/Main.lua"))()(Release)
+loadstring(not Release and readfile(Path .. "Versions/" .. ROCHAT_Config.Version .. "/Main.lua") or game:HttpGet(Path .. "Versions/" .. ROCHAT_Config.Version .. "/Main.lua"))()(Release)
