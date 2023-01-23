@@ -1,9 +1,6 @@
 # RoChat
 **RoChat** is a LuaU script I decided to make because I felt like roblox's native chat was lacking in some aspects. **RoChat** will add emojis, file sharing, embeds, and a censor free chat.
 
-## File Sharing
-## Emojis
-To add an emoji without using any tools you'll have to open the proper profile file in `RoChat/Profiles/` for the version you're using and insert the JSON that you'll create in the emoji list. 
 
 ```lua
 getgenv().ROCHAT_Config = {
@@ -13,6 +10,10 @@ getgenv().ROCHAT_Config = {
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Ro-Chat/Chat/main/Loader.lua"))()
 ```
+
+## File Sharing
+## Emojis
+To add an emoji without using any tools you'll have to open the proper profile file in `RoChat/Profiles/` for the version you're using and insert the JSON that you'll create in the emoji list. 
 
 ---
 
