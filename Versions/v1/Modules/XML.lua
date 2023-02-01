@@ -12,9 +12,9 @@ function get_attributes(str)
                     Value = false
                 elseif Value == "true" then
                     Value = true
-                elseif Value:sub(1, 3):lower() == "udim2" then
+                elseif Value:sub(1, 5):lower() == "udim2" then
                     local pos = Value:split("(")[2]:split(")")
-                    Value = pos:split(",")
+                    Value = UDim2.new(unpack(pos:split(",")))
                 elseif Value:sub(1, 3):lower() == "rgb" then
                     local RGB = Value:split("(")[2]:split(")")[1]
                     Value = {R = RGB:split(",")[1], G = RGB:split(",")[2], B = RGB:split(",")[3]}
