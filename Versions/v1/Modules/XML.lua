@@ -1,4 +1,4 @@
-local get_attributes = function(str)
+function get_attributes(str)
     local Data = {}
     if #str:split("=\"")>0 then
         for i = 2,#str:split("=\"") do
@@ -25,10 +25,6 @@ local get_attributes = function(str)
     end
     return Data
 end
-
-local EmbedMT = {
-    
-}
 
 local XML = {
     Tags = {},
