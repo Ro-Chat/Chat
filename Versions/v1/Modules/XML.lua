@@ -8,9 +8,9 @@ function get_attributes(str)
                 local Value = str:split("=\"")[i]:split("\"")[1]
                 if Value:sub(1, 1) == "[" then
                     Value = loadstring("return {"..Value:sub(2,#Value-1).."}")()
-                elseif Value == "false" then
+                elseif Value:lower() == "false" then
                     Value = false
-                elseif Value == "true" then
+                elseif Value:lower() == "true" then
                     Value = true
                 elseif Value:sub(1, 5):lower() == "udim2" then
                     local pos = Value:split("(")[2]:split(")")
