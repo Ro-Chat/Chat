@@ -31,7 +31,7 @@ For an image you'll need to use the following JSON.
 	"Url": "https://google.com/emoji.png"
 }
 ```
-For a video you'll need to convert the GIF or MP4 into images. I'd use [ImageMagick](https://imagemagick.org/) for that make sure to install legacy so you install convert.
+For a video you'll need to convert the GIF or MP4 into images. I'd use [ImageMagick](https://imagemagick.org/) for that make sure to select legacy in the installer so you install convert.
 
 run this command after installing **ImageMagick** `convert PATH_TO_GIF.gif FRAMES_PATH%03d.png`
 
