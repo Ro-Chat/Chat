@@ -13,7 +13,7 @@ function VideoPlayer.ImagePlay(self, ImageLabel, Images, FPS)
    task.spawn(function()
     local Frame = 0
     local Frames = #Images
-    while true do task.wait((1 / FPS))
+    while true do task.wait((1 / 60) * FPS)
       if Frame == Frames then
         Frame = 0
       end
