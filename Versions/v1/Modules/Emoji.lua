@@ -34,7 +34,7 @@ Emoji.MakeEmoji = function(parent, emoji)
 
         Image.LayoutOrder = #parent:GetChildren()
 
-        local Frames = EM.Path and listfiles("RoChat/Emojis/" .. emoji) or {}
+        local Frames = not EM.Url and listfiles("RoChat/Emojis/" .. emoji) or {}
 
         if #Frames == 0 then
             for _, Frame in next, EM.Frames do
