@@ -37,21 +37,11 @@ For a video you'll need to convert the GIF or MP4 into images. I'd use [ImageMag
 
 run this command after installing **ImageMagick** `convert PATH_TO_GIF.gif FRAMES_PATH%03d.png`
 
-after extracting the frames from the GIF you'll need to put the images in `RoChat/Emojis`
+after extracting the frames from the GIF you'll need to create a folder with the emoji's name in `RoChat/Emojis` then you'll need to put the images inside the directory.
 
  ```json
 "Emoji_Name": {
 	"Type": "Video",
-	"Frames": [
-	  "frame000.png",
-	  "frame001.png",
-	  "frame002.png",
-	  "frame003.png",
-	  "frame004.png",
-	  "frame005.png",
-	  "frame006.png",
-	  "frame007.png",
-	],
 	"FPS": 20
 }
 ```
