@@ -19,6 +19,8 @@ return function(Release)
         return result
     end
 
+    getgenv().Cache = Import("Cache")
+
     local Players = game:GetService("Players")
 
     local Chat    = Import("Chat")
@@ -64,14 +66,19 @@ return function(Release)
     end)
 
     ROCHAT_Config.Client = Client
-    ROCHAT_Config.Enabled = ROCHAT_Config or true
+    ROCHAT_Config.Enabled = ROCHAT_Config.Enabled or true
 
     -- Change this for custom chats
     Chat.ScrollingFrame = Players.LocalPlayer.PlayerGui.Chat.Frame.ChatChannelParentFrame.Frame_MessageLogDisplay.Scroller
+    Chat.ChatBar        = Players.LocalPlayer.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar
+
+    -- Chat.ChatBar.TextBounds.TextScaled = false
+    -- task.wait(0.2)
+    -- Chat.ChatBar.TextBounds.TextScaled = true
+
     Embed.ScrollingFrame = Chat.ScrollingFrame
 
-    local ChatBar = Players.LocalPlayer.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar
-    local EnterConnection = getconnections(ChatBar.FocusLost)[1]
+    local EnterConnection = getconnections(Chat.ChatBar.FocusLost)[1]
     
     Players.LocalPlayer.Chatted:Connect(function(Message)
         local function runCommand(command, func)
@@ -86,9 +93,9 @@ return function(Release)
             ROCHAT_Config.Enabled = true
             ChatBar.Text = ""
             EnterConnection:Disable()
-            local customConnection;customConnection = ChatBar.FocusLost:Connect(function(enter)
+            local customConnection;customConnection = Chat.ChatBar.FocusLost:Connect(function(enter)
                 if not enter then return end
-                local Message = ChatBar.Text
+                local Message = Chat.ChatBar.Text
                 if Message == "" then return end
                 if Message:sub(1, 1) ~= "/" then
                     Client:Send({
@@ -98,7 +105,7 @@ return function(Release)
                         Name = ROCHAT_Config.Profile.Name,
                         Color = ROCHAT_Config.Profile.Color
                     })
-                    ChatBar.Text = ""
+                    Chat.ChatBar.Text = ""
                 end
                 local function runCommand(command, func)
                     if Message:match("^/" .. command) then
@@ -111,7 +118,7 @@ return function(Release)
                 runCommand("disable", function()
                     ROCHAT_Config.Enabled = false
                     customConnection:Disconnect()
-                    ChatBar.Text = ""
+                    Chat.ChatBar.Text = ""
                     EnterConnection:Enable()
                 end)
             end)
@@ -120,9 +127,9 @@ return function(Release)
     end)
     if ROCHAT_Config.Enabled then
         EnterConnection:Disable()
-        local customConnection;customConnection = ChatBar.FocusLost:Connect(function(enter)
+        local customConnection;customConnection = Chat.ChatBar.FocusLost:Connect(function(enter)
          if not enter then return end
-         local Message = ChatBar.Text
+         local Message = Chat.ChatBar.Text
          if Message == "" then return end
          if Message:sub(1, 1) ~= "/" then
              Client:Send({
@@ -132,7 +139,7 @@ return function(Release)
                  Name = ROCHAT_Config.Profile.Name,
                  Color = ROCHAT_Config.Profile.Color
              })
-             ChatBar.Text = ""
+             Chat.ChatBar.Text = ""
          end
          local function runCommand(command, func)
              if Message:match("^/" .. command) then
@@ -145,7 +152,7 @@ return function(Release)
          runCommand("disable", function()
              ROCHAT_Config.Enabled = false
              customConnection:Disconnect()
-             ChatBar.Text = ""
+             Chat.ChatBar.Text = ""
              EnterConnection:Enable()
          end)
         end)

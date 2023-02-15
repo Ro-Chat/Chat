@@ -23,25 +23,30 @@ Emoji.MakeEmoji = function(parent, emoji)
             task.wait(0.25)
             delfile("RoChat/Emojis/" .. emoji .. "_tmp.png")
         end)
+
+        return Image
     end
     
     if EM.Type == "Video" then
+
+        -- Add spritesheet
         local Image = Instance.new("ImageLabel", parent)
 
         Image.LayoutOrder = #parent:GetChildren()
 
         local Frames = EM.Path and listfiles("RoChat/Emojis/" .. emoji) or {}
 
-        if Frames == {} then
+        if #Frames == 0 then
             for _, Frame in next, EM.Frames do
-                print(EM.Url, Frame)
-                table.insert(Frames, EM.Url .. Frame)
+                table.insert(Frames, EM.Url .. emoji .. "/" .. Frame)
             end
         end
 
         Image.BackgroundTransparency = 1
 
-        VideoPlayer:ImagePlay(Image, Frames, EM.FPS)
+        VideoPlayer:ImagePlay(emoji, Image, Frames, EM.FPS)
+
+        return Image
     end
 end
 

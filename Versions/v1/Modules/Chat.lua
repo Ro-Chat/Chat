@@ -130,10 +130,19 @@ local Chat = {
 					end
 				end
     		end
+
     		WordLabel.Text = RichWord
-    		
+
+			WordLabel.TextSize = 18
+    		WordLabel.Size = UDim2.new(0, WordLabel.TextBounds.X, 0, WordLabel.TextBounds.Y)
+
+			if Emoji and ROCHAT_Config.Profile.Emojis[Emoji] then
+    		    WordLabel:Destroy()
+    		    WordLabel = EmojiLib.MakeEmoji(MessageContent, Emoji)
+    		end
+
     		--> Check if word goes outside of the line
-    		if WordLabel.AbsolutePosition.X + WordLabel.AbsoluteSize.X + 36 > (MessageContent.AbsoluteSize.X + MessageContent.AbsolutePosition.X) then
+    		if WordLabel.AbsolutePosition.X + WordLabel.AbsoluteSize.X + 16 > (MessageContent.AbsoluteSize.X + MessageContent.AbsolutePosition.X) then
     			
     			--> Add another line to the main frame
     			MessageContent = Instance.new("ScrollingFrame", Frame)
@@ -157,15 +166,8 @@ local Chat = {
     			if WordLabel then
     				WordLabel.Parent = MessageContent
     				WordLabel.LayoutOrder = #MessageContent:GetChildren()
-    				WordLabel.TextTruncate = Enum.TextTruncate.AtEnd
+    				-- WordLabel.TextTruncate = Enum.TextTruncate.AtEnd
     			end
-    		end
-    		WordLabel.TextSize = 18
-    		WordLabel.Size = UDim2.new(0, WordLabel.TextBounds.X, 0, WordLabel.TextBounds.Y)
-    		
-    		if Emoji and ROCHAT_Config.Profile.Emojis[Emoji] then
-    		    WordLabel:Destroy()
-    		    EmojiLib.MakeEmoji(MessageContent, Emoji)
     		end
     		
     		if Word:match("__$") then

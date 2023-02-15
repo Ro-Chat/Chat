@@ -8,7 +8,6 @@ local encodeb64  = syn and syn.crypt.base64.encode or crypt and crypt.base64enco
 
 local Request   = syn and syn.request or http and http.request
 local WebSocket = syn and syn.websocket or WebSocket
-local GetAsset  = syn and getsynasset or getcustomasset
 
 function Utility:JSON(val)
   if type(val) == "string" then
@@ -23,9 +22,16 @@ function Utility:Client(data)
   ]]
   local Client = {
       WSS               = data.Url,
+      Key               = data.Key,
       Client            = WebSocket.connect(data.Url),
+      SendFile          = function(self, Name, Bin, Key)
+        self:Send({
+          Name = Name,
+          Bin = encodeb64(not Key and Bin or GCMEncrypt(Bin, Key))
+        })
+      end,
+      CloseConnection   = nil,
       RecieveConnection = nil,
-      CloseConnection   = nil
   }
 
   function Client:Send(value)
