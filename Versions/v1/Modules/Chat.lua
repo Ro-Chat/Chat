@@ -41,10 +41,19 @@ local Chat = {
     	
     	return left_string .. message .. right_string, old
     end,
+	GetOrder = function(self)
+	   local Order = 0
+	   for _, Frame in next, self.ScrollingFrame:GetChildren() do
+		  if Frame:IsA("Frame") and Frame.LayoutOrder > Order then
+			Order = Frame.LayoutOrder
+		  end
+	   end
+	   return Order
+	end,
     CreateMessage = function(self, data)
         local ScrollingFrame = self.ScrollingFrame
         local Frame = Instance.new("Frame", ScrollingFrame)
-        Frame.LayoutOrder = #ScrollingFrame:GetChildren() - 1
+        Frame.LayoutOrder = self:GetOrder()
         Frame.BackgroundTransparency = 1
         Frame.Size = UDim2.new(1, 0, 0, 22)
         

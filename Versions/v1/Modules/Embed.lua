@@ -1,9 +1,8 @@
-local XML   = Import("XML")
-local UI    = Import("UI")
-local Image = Import("Image")
+local XML = Import("XML")
+local UI  = Import("UI")
 
-local Extra = UI.Extra
-local EmbedUI = UI.Embed
+local Extra    = UI.Extra
+local EmbedUI  = UI.Embed
 local Interact = UI.Interact
 
 Extra.Request  = syn and syn.request

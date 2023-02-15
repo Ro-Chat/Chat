@@ -1,5 +1,4 @@
 local VideoPlayer = Import("VideoPlayer")
-local ImageLib = Import("Image")
 
 local GetAsset = syn and getsynasset or getcustomasset
 
@@ -27,14 +26,20 @@ Emoji.MakeEmoji = function(parent, emoji)
     end
     
     if EM.Type == "Video" then
-        local Frames = EM.Frames
         local Image = Instance.new("ImageLabel", parent)
 
-        local Img = ImageLib.new(readfile("RoChat/Emojis/" .. Frames[1]))
         Image.LayoutOrder = #parent:GetChildren()
 
+        local Frames = EM.Path and listfiles("RoChat/Emojis/" .. emoji) or {}
+
+        if Frames == {} then
+            for _, Frame in next, EM.Frames do
+                print(EM.Url, Frame)
+                table.insert(Frames, EM.Url .. Frame)
+            end
+        end
+
         Image.BackgroundTransparency = 1
-        Image.Size = UDim2.new(0, Img.WidthOffset * 22, 0, 22)
 
         VideoPlayer:ImagePlay(Image, Frames, EM.FPS)
     end

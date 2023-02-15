@@ -1,4 +1,4 @@
-function get_attributes(str)
+local get_attributes = function(str)
     local Data = {}
     if #str:split("=\"")>0 then
         for i = 2,#str:split("=\"") do
@@ -8,13 +8,13 @@ function get_attributes(str)
                 local Value = str:split("=\"")[i]:split("\"")[1]
                 if Value:sub(1, 1) == "[" then
                     Value = loadstring("return {"..Value:sub(2,#Value-1).."}")()
-                elseif Value:lower() == "false" then
+                elseif Value == "false" then
                     Value = false
-                elseif Value:lower() == "true" then
+                elseif Value == "true" then
                     Value = true
-                elseif Value:sub(1, 5):lower() == "udim2" then
+                elseif Value:sub(1, 3):lower() == "udim2" then
                     local pos = Value:split("(")[2]:split(")")
-                    Value = UDim2.new(unpack(pos:split(",")))
+                    Value = pos:split(",")
                 elseif Value:sub(1, 3):lower() == "rgb" then
                     local RGB = Value:split("(")[2]:split(")")[1]
                     Value = {R = RGB:split(",")[1], G = RGB:split(",")[2], B = RGB:split(",")[3]}
@@ -45,9 +45,9 @@ local XML = {
                 Attributes.Parent = ParentStack[1]
                 Attributes.Children = {}
                 Attributes.Remove = function(this)
-                    table.remove(self.Tags, this.Order)
+                    table.remove(self.Tags, this.ID)
                 end
-                Attributes.Order = #self.Tags + 1
+                Attributes.ID = #self.Tags + 1
                 if ParentStack[1] then
                     table.insert(ParentStack[1].Children, Attributes)
                 end
