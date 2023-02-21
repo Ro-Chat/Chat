@@ -57,4 +57,4 @@ after extracting the frames from the GIF you'll need to create a folder with the
 }
 ```
 ## Embeds
-To create an embed you'll have to create an XML file in `RoChat/Embeds` and use the (documentation)[https://github.com/Ro-Chat/Chat/blob/main/Documentation/Embed.md]
+To create an embed you'll have to create an XML file in `RoChat/Embeds` and use the (documentation)[/Documentation/Embed.md]
