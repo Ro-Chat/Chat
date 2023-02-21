@@ -6,6 +6,7 @@ local Players = game:GetService("Players")
 local Chat = {
 	Players = {},
     ScrollingFrame = nil,
+	ChatBar = nil,
     Markdown = function(message, flags)
     	local left_string = ""
     	local right_string = ""
@@ -64,7 +65,14 @@ local Chat = {
         NameTag.TextSize = 18
         NameTag.BackgroundTransparency = 18
         NameTag.TextColor3 = Color3.fromRGB(unpack(data.Color or data.Colour))
-        
+		NameTag.MouseButton1Down:Connect(function()
+			local MessageMode = self.ChatBar.Parent.MessageMode
+			MessageMode.TextColor3 = Color3.fromRGB(unpack(data.Color or data.Colour))
+			MessageMode.Text = ("[To %s]"):format(data.Name)
+			local TextBounds = MessageMode.TextBounds
+			MessageMode.Size = UDim2.new(0, TextBounds.X + 4, 1, 0)
+		end)
+
         local TextSize = NameTag.TextBounds
         NameTag.Size = UDim2.new(0, TextSize.X, 0, TextSize.Y)
         

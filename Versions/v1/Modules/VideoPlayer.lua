@@ -1,12 +1,15 @@
 local ImageLib = Import("Image")
+
 getgenv().VideoPlayer = VideoPlayer or {
   Videos = {},
-  Frames = {}
+  Frames = {},
+  MaxVideos = ROCHAT_Config.Profile.Emojis.MaxAnimatedEmojis or 2
 }
 
 function VideoPlayer.Append(self, val)
-  self.Videos[2] = self.Videos[1] 
-  self.Videos[1] = val
+  table.insert(self.Videos, 1, val)
+  -- self.Videos[2] = self.Videos[1] 
+  -- self.Videos[1] = val
 end
 
 function VideoPlayer.ImagePlay(self, VideoName, ImageLabel, Images, FPS)
@@ -40,7 +43,6 @@ function VideoPlayer.ImagePlay(self, VideoName, ImageLabel, Images, FPS)
     }
 
     ImageLabel.MouseEnter:Connect(function(x, y)
-      print(x, y)
       self:Add(VideoData)
     end)
 
@@ -71,8 +73,8 @@ end
 function VideoPlayer.Add(self, Video)
   -- if self.Videos[1] == Video or self.Videos[2] == Video then return end
 
-  if self.Videos[2] then
-      self.Videos[2]:Pause()
+  if #self.Videos > self.MaxVideos then
+      self.Videos[self.MaxVideos]:Pause()
   end
 
   VideoPlayer:Append(Video)

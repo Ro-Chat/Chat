@@ -1,4 +1,5 @@
-local VideoPlayer = Import("VideoPlayer")
+local ImageLib = Import("Image")
+Import("VideoPlayer")
 
 local GetAsset = syn and getsynasset or getcustomasset
 
@@ -17,8 +18,8 @@ Emoji.MakeEmoji = function(parent, emoji)
         
         Image.BackgroundTransparency = 1
         Image.Size = UDim2.new(0, Img.WidthOffset * 22, 0, 22)
-        writefile("RoChat/Emojis/" .. emoji .. "_tmp.png", ImgBuffer)
-        Image.Image = GetAsset("RoChat/Emojis/" .. emoji .. "_tmp.png")
+        writefile("RoChat/Emojis/" .. emoji .. ".png", ImgBuffer)
+        Image.Image = GetAsset("RoChat/Emojis/" .. emoji .. ".png")
         task.spawn(function()
             task.wait(0.25)
             delfile("RoChat/Emojis/" .. emoji .. "_tmp.png")
