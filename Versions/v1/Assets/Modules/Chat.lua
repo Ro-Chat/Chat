@@ -85,6 +85,12 @@ local Chat = {
 			MessageMode.Size = UDim2.new(0, math.ceil(TextBounds.X), 1, 0)
 			self.ChatBar.Position = UDim2.new(0, math.ceil(TextBounds.X) + 4, 0, 0)
 			self.WhisperTo = data.Id
+			local Connection
+
+			Connection = MessageMode:GetPropertyChangedSignal("Text"):Connect(function()
+				self.WhisperTo = nil
+				Connection:Disconnect()
+			end)
 		end)
 
         local TextSize = NameTag.TextBounds
