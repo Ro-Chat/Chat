@@ -1,8 +1,6 @@
 import asyncio
 import websockets
 import json
-# import requests
-# import base64
 
 ServerName = "RoChat"
 
@@ -43,9 +41,9 @@ async def handler(websocket):
                 "MessageLogs": message_logs
               }))
               
-              # await broadcast(json.dumps(data))
+              await broadcast(json.dumps(data))
               # Keep for debugging
-              await broadcast(data, from_client = websocket)
+              # await broadcast(data, from_client = websocket)
           if data["Type"] == "UI":
             if data["SubType"] == "Chat":
               User = client_data[websocket]
@@ -57,7 +55,8 @@ async def handler(websocket):
               if not "To" in data:
                 message_logs.append({
                     "From": User["Id"],
-                    "Message": data["Message"]
+                    "Message": data["Message"],
+                    "Name": ServerName
                 })
                 await broadcast(json.dumps(data))
               else:
