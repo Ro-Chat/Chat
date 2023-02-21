@@ -1,13 +1,20 @@
 import asyncio
 import websockets
 import json
-import requests
-import base64
+# import requests
+# import base64
+
+ServerName = "RoChat"
 
 CLIENTS = set()
 
 client_data = {}
+message_logs = []
 
+def getData(id):
+  for Client in client_data:
+    if client_data[Client]["Id"] == id:
+      return Client
 
 async def handler(websocket):
     CLIENTS.add(websocket)
@@ -16,6 +23,10 @@ async def handler(websocket):
           data = json.loads(data)
           if not "Type" in data:
             pass
+          if data["Type"] == "File":
+            if data["Name"] == "PROFILE_IMG":
+              if websocket in client_data:
+                client_data[websocket]["Image"] = data["Bin"]
           if data["Type"] == "Connection":
             if data["SubType"] == "Join":
               client_data[websocket] = {
@@ -24,12 +35,35 @@ async def handler(websocket):
                 "Socket": websocket,
                 "Interactions": []
               }
+
+              client_data[websocket]["Id"] = len(client_data)
+              
+              await websocket.send(json.dumps({
+                "Id": len(client_data),
+                "MessageLogs": message_logs
+              }))
+              
+              # await broadcast(json.dumps(data))
               # Keep for debugging
-              await broadcast(json.dumps(data))
-              # await broadcast(data, from_client = websocket)
+              await broadcast(data, from_client = websocket)
           if data["Type"] == "UI":
             if data["SubType"] == "Chat":
-              await broadcast(json.dumps(data))
+              User = client_data[websocket]
+
+              data["Id"] = User["Id"]
+              data["Name"] = User["Name"]
+              data["Color"] = User["Color"]
+              
+              if not "To" in data:
+                message_logs.append({
+                    "From": User["Id"],
+                    "Message": data["Message"]
+                })
+                await broadcast(json.dumps(data))
+              else:
+                toClient = getData(data["To"])
+                await toClient.send(json.dumps(data))
+              
             if data["SubType"] == "CreateInteraction":
               client_data[websocket]["Interactions"].append(data["Id"])
             if data["SubType"] == "Interact":
@@ -38,7 +72,27 @@ async def handler(websocket):
                   if interaction == data["Id"]:
                     await client.send(json.dumps(data))
           pass
+    except Exception:
+      Id = client_data[websocket]["Id"]
+      await broadcast({
+        "Type": "Connection",
+        "SubType": "Leave",
+        "Id": Id
+      })
+      Idx = 0
+      for Json in message_logs:
+        if Json["From"] == Id:
+          message_logs.pop(Idx)
+        Idx += 1
+      del client_data[websocket]
+      CLIENTS.remove(websocket)
     finally:
+        await broadcast({
+          "Type": "Connection",
+          "SubType": "Leave",
+          "Id": client_data[websocket]["Id"]
+        })
+        del client_data[websocket]
         CLIENTS.remove(websocket)
 
 
