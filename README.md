@@ -3,7 +3,7 @@
 # RoChat
 **RoChat** is a LuaU script I decided to make because I felt like roblox's native chat was lacking in some aspects.
 
-**RoChat** will add emojis, file sharing, embeds, and a censor free chat.
+**RoChat** will add custom emojis, file sharing, embeds, and a censor free chat.
 
 
 ```lua
