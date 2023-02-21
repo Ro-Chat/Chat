@@ -22,6 +22,6 @@ getgenv().ROCHAT_Config = {
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Ro-Chat/Chat/main/Loader.lua"))()
 ```
 # Documentation
- * [Emojis](/Documentation/v1/Emojis.md)
+ * [Emoji](/Documentation/v1/Emojis.md)
  * [Embed](/Documentation/v1/Embed.md)
  * [File Sharing](/Documentation/v1/FileSharing.md)
