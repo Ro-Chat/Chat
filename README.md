@@ -5,7 +5,6 @@
 
 **RoChat** will add custom emojis, file sharing, embeds, and a censor free chat.
 
-## Script: 
 ```lua
 ------------------------------------------------------------------------
 -- ooooooooo.               .oooooo.   oooo                      .    --
