@@ -75,4 +75,6 @@ else
     writefile(ProfilePath, Template)
 end
 
-loadstring(readfile(Path .. "Versions/" .. ROCHAT_Config.Version .. "/Main.lua"))()(Release)
+local MainPath = Path .. "Versions/" .. ROCHAT_Config.Version .. "/Main.lua"
+
+loadstring(not Release and readfile(MainPath) or game:HttpGet(MainPath))()(Release)
