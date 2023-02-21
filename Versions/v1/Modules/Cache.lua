@@ -3,10 +3,16 @@ local Asset = syn and getsynasset or getcustomasset
 local Cache = {
     CachedImages = {},
     GetAsset = function(self, Path)
-        print(Path)
         if Path:match("^http") then
-          writefile("RoChat/Emojis/" .. Path:split("/")[#Path:split("/")], game:HttpGet(Path))
-          Path = "RoChat/Emojis/" .. Path:split("/")[#Path:split("/")]
+          local FilePath = "RoChat/Emojis/" .. Path:split("/")[#Path:split("/")]
+          local AssetData = game:HttpGet(Path)
+            
+          if not isfile(FilePath) or readfile(FilePath) ~= AssetData then
+              writefile(FilePath, game:HttpGet(Path))
+          end
+          
+          Path = FilePath
+          
           table.insert(self.CachedImages, Path)
         end
       
