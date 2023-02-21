@@ -49,11 +49,52 @@ else
     if ROCHAT_Config.Version == "v1" then
         local Profile = {
             Name = game.Players.LocalPlayer.DisplayName,
-            Color = {math.random(50, 150), math.random(50, 150), math.random(50, 150)},
+            Color = {math.random(100, 250), math.random(100, 250), math.random(100, 250)},
             Emojis = {
+                MaxAnimatedEmojis = 2,
                 troll = {
                     Url = "https://raw.githubusercontent.com/Ro-Chat/Chat/main/Emojis/troll.png",
                     Type = "Image"
+                },
+                guh = {
+                    FPS = 30,
+                    Url = "https://raw.githubusercontent.com/Ro-Chat/Chat/main/Emojis/",
+                    Frames = {
+                        "guh000.png",
+                        "guh001.png",
+                        "guh002.png",
+                        "guh003.png",
+                        "guh004.png",
+                        "guh005.png",
+                        "guh006.png",
+                        "guh007.png",
+                        "guh008.png",
+                        "guh009.png",
+                        "guh010.png",
+                        "guh011.png",
+                        "guh012.png",
+                        "guh013.png",
+                        "guh014.png",
+                        "guh015.png",
+                        "guh016.png",
+                        "guh017.png",
+                        "guh018.png",
+                        "guh019.png",
+                        "guh020.png",
+                        "guh021.png",
+                        "guh022.png",
+                        "guh023.png",
+                        "guh024.png",
+                        "guh025.png",
+                        "guh026.png",
+                        "guh027.png",
+                        "guh028.png",
+                        "guh029.png",
+                        "guh030.png",
+                        "guh031.png",
+                        "guh032.png"
+                    },
+                    Type = "Video"
                 }
             }
         }
@@ -62,4 +103,4 @@ else
     end
 end
 
-loadstring(not Release and readfile(Path .. "Versions/" .. ROCHAT_Config.Version .. "/Main.lua") or game:HttpGet(Path .. "Versions/" .. ROCHAT_Config.Version .. "/Main.lua"))()(Release)
+loadstring(readfile(Path .. "Versions/" .. ROCHAT_Config.Version .. "/Main.lua"))()(Release)
