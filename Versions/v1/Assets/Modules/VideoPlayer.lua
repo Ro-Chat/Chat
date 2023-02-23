@@ -11,7 +11,6 @@ getgenv().VideoPlayer = VideoPlayer or {
 task.spawn(function()
   for EmojiName, Emoji in next, ROCHAT_Config.Profile.Emojis do
     if Emoji.Type == "Video" then
-      print("Attempting to cache", EmojiName)
       local Frames = not Emoji.Url and listfiles("RoChat/Emojis/" .. EmojiName) or {}
 
       if #Frames == 0 then
@@ -20,7 +19,6 @@ task.spawn(function()
           end
       end
        
-      print("Successfully cached", EmojiName)
       VideoPlayer.Frames[EmojiName] = Frames
     end
   end
