@@ -186,7 +186,8 @@ local Chat = {
     		end
 
     		--> Check if word goes outside of the line
-    		if WordLabel.AbsolutePosition.X + WordLabel.AbsoluteSize.X + 16 > (MessageContent.AbsoluteSize.X + MessageContent.AbsolutePosition.X) then
+			print(WordLabel.AbsolutePosition.X + WordLabel.AbsoluteSize.X, MessageContent.AbsoluteSize.X + MessageContent.AbsolutePosition.X - 18)
+    		if WordLabel.AbsolutePosition.X + WordLabel.AbsoluteSize.X + (Emoji and 32 or 0) > MessageContent.AbsoluteSize.X + MessageContent.AbsolutePosition.X - 18 then
     			
     			--> Add another line to the main frame
 				local BeforeLine = MessageContent

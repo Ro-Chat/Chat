@@ -18,7 +18,8 @@ local Cache = {
       
         return {
             Asset = Asset(Path),
-            Path = Path
+            Path = Path,
+            Buffer = readfile(Path)
         }
     end,
     Clear = function(self)
@@ -27,5 +28,7 @@ local Cache = {
         end
     end
 }
+
+getgenv().Cache = Cache
 
 return Cache

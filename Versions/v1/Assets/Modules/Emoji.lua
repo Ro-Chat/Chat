@@ -1,9 +1,9 @@
 local ImageLib = Import("Image")
+Import("Cache")
 Import("VideoPlayer")
 
-local GetAsset = syn and getsynasset or getcustomasset
-
 local Emoji = {
+    CachedEmojis = {},
     PlayStack = {},
 }
 
@@ -11,32 +11,32 @@ Emoji.MakeEmoji = function(parent, emoji)
     local EM = ROCHAT_Config.Profile.Emojis[emoji]
     
     if EM.Type == "Image" then
-        local ImgBuffer = EM.Url and game:HttpGet(EM.Url) or EM.Path and readfile("RoChat/Emojis/" .. EM.Path)
-        local Img = ImageLib.new(ImgBuffer)
+        local ImageCache = Emoji.CachedEmojis[emoji] or Cache:GetAsset(EM.Url or ("RoChat/Emojis/" .. EM.Path))
+        if not Emoji.CachedEmojis[emoji] then
+            Emoji.CachedEmojis[emoji] = ImageCache
+        end
+        local Img = ImageLib.new(ImageCache.Buffer)
         local Image = Instance.new("ImageLabel", parent)
         Image.LayoutOrder = #parent:GetChildren()
         
         Image.BackgroundTransparency = 1
         local Height = Img.Height
 
-        if Img.Height > 50 then
-            Image.Size = UDim2.new(0, Img.WidthOffset * 50, 0, 50)
-            Height = 50
-        else
-            Image.Size = UDim2.new(0, Img.Width, 0, Img.Height)
+        if Img.Height > 32 then
+            Height = Img.Height / 2
+            if Height > 32 then
+                Height = 32
+            end
         end
+
+        Image.Size = UDim2.new(0, Img.WidthOffset * Height, 0, Height)
 
         if parent.AbsoluteSize.Y < Height then
             parent.Size = UDim2.new(UDim.new(1, 0), UDim.new(0, Height))
             parent.Parent.Size = parent.Parent.Size + UDim2.new(0, 0, 0, Height - 18)
         end
 
-        writefile("RoChat/Emojis/" .. emoji .. ".png", ImgBuffer)
-        Image.Image = GetAsset("RoChat/Emojis/" .. emoji .. ".png")
-        task.spawn(function()
-            task.wait(0.25)
-            delfile("RoChat/Emojis/" .. emoji .. ".png")
-        end)
+        Image.Image = ImageCache.Asset
 
         return Image
     end
@@ -46,6 +46,7 @@ Emoji.MakeEmoji = function(parent, emoji)
         -- Add spritesheet
         local Image = Instance.new("ImageLabel", parent)
 
+        -- task.spawn(function ()
         Image.LayoutOrder = #parent:GetChildren()
 
         local Frames = not EM.Url and listfiles("RoChat/Emojis/" .. emoji) or {}
@@ -58,8 +59,8 @@ Emoji.MakeEmoji = function(parent, emoji)
 
         Image.BackgroundTransparency = 1
 
-        VideoPlayer:ImagePlay(parent, emoji, Image, Frames, EM.FPS)
-
+        VideoPlayer:ImagePlay(parent, emoji, Image, Frames, EM.FPS, 32)
+        -- end)
         return Image
     end
 end
