@@ -3,8 +3,31 @@ local ImageLib = Import("Image")
 getgenv().VideoPlayer = VideoPlayer or {
   Videos = {},
   Frames = {},
-  MaxVideos = ROCHAT_Config.Profile.Emojis.MaxAnimatedEmojis or 2
+  MaxVideos = ROCHAT_Config.Profile.Settings.MaxAnimatedEmojis or 2
 }
+
+
+-- Cache emojis
+task.spawn(function()
+  for EmojiName, Emoji in next, ROCHAT_Config.Profile.Emojis do
+    if EmojiName.Type == "Video" then
+      local Frames = not Emoji.Url and listfiles("RoChat/Emojis/" .. EmojiName) or {}
+
+      if #Frames == 0 then
+          for _, Frame in next, Emoji.Frames do
+              table.insert(Frames, Emoji.Url .. EmojiName .. "/" .. Frame)
+          end
+      end
+      local CachedFrames = {}
+
+      for _, Frame in next, Frames do
+        table.insert(CachedFrames, Cache:GetAsset(Frame))
+      end
+
+      VideoPlayer.Frames[EmojiName] = CachedFrames
+    end
+  end
+end)
 
 function VideoPlayer.Append(self, val)
   table.insert(self.Videos, 1, val)
@@ -17,7 +40,7 @@ function VideoPlayer.ImagePlay(self, Parent, VideoName, ImageLabel, Images, FPS)
     local Frame = 1
     local Frames = {}
 
-    -- print(#Images)
+    -- Cache frames
     if not self.Frames[VideoName] then
       for _, Frame in next, Images do
         table.insert(Frames, Cache:GetAsset(Frame))
