@@ -10,7 +10,7 @@ getgenv().VideoPlayer = VideoPlayer or {
 -- Cache emojis
 task.spawn(function()
   for EmojiName, Emoji in next, ROCHAT_Config.Profile.Emojis do
-    if EmojiName.Type == "Video" then
+    if Emoji.Type == "Video" then
       local Frames = not Emoji.Url and listfiles("RoChat/Emojis/" .. EmojiName) or {}
 
       if #Frames == 0 then
