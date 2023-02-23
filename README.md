@@ -27,15 +27,15 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Ro-Chat/Chat/main/Loa
  - [ ] UI
   - [ ] Drawing library
   - [ ] Custom chatbar
-    - [ ] File browser
-    - [ ] Emoji browser
-    - [ ] Autocorrect
-   - [ ] Context menu
-    - [ ] Reactions
-    - [ ] Delete message
-    - [ ] Edit message
-    - [ ] Reply
-    - [ ] Copy to clipboard
+     - [ ] File browser
+     - [ ] Emoji browser
+     - [ ] Autocorrect
+  - [ ] Context menu
+     - [ ] Reactions
+     - [ ] Delete message
+     - [ ] Edit message
+     - [ ] Reply
+     - [ ] Copy to clipboard
  - [ ] Plugins
 
 # Documentation
