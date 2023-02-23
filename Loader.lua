@@ -61,7 +61,7 @@ else
     if isfile(ProfileTemplate) then
         ProfileTemplate = readfile(ProfileTemplate)
     else
-        ProfileTemplate = game:HttpGet(("https://github.com/Ro-Chat/Chat/tree/main/%s"):format(ProfileTemplate))
+        ProfileTemplate = game:HttpGet(("https://raw.githubusercontent.com/Ro-Chat/Chat/main/%s"):format(ProfileTemplate:sub(8, #ProfileTemplate)))
     end
     
     local Template = makeTemplate(ProfileTemplate, {
