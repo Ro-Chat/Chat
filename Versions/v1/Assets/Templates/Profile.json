@@ -4,8 +4,10 @@
         "Color": [__RED__, __GREEN__, __BLUE__],
         "Description": "No description has been set."
     },
+    "Settings": {
+        "MaxAnimatedEmojis": 2
+    },
     "Emojis": {
-        "MaxAnimatedEmojis": 2,
         "guh": {
             "Type": "Video",
             "FPS": 30,
