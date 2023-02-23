@@ -17,12 +17,22 @@ Emoji.MakeEmoji = function(parent, emoji)
         Image.LayoutOrder = #parent:GetChildren()
         
         Image.BackgroundTransparency = 1
-        Image.Size = UDim2.new(0, Img.WidthOffset * 22, 0, 22)
+        local Height = Img.Height
+
+        if Img.Height > 50 then
+            Image.Size = UDim2.new(0, Img.WidthOffset * 50, 0, 50)
+            Height = 50
+        else
+            Image.Size = UDim2.new(0, Img.Width, 0, Img.Height)
+        end
+
+        parent.Size = UDim2.new(UDim.new(1, 0), UDim.new(0, Height))
+
         writefile("RoChat/Emojis/" .. emoji .. ".png", ImgBuffer)
         Image.Image = GetAsset("RoChat/Emojis/" .. emoji .. ".png")
         task.spawn(function()
             task.wait(0.25)
-            delfile("RoChat/Emojis/" .. emoji .. "_tmp.png")
+            delfile("RoChat/Emojis/" .. emoji .. ".png")
         end)
 
         return Image
@@ -45,7 +55,7 @@ Emoji.MakeEmoji = function(parent, emoji)
 
         Image.BackgroundTransparency = 1
 
-        VideoPlayer:ImagePlay(emoji, Image, Frames, EM.FPS)
+        VideoPlayer:ImagePlay(parent, emoji, Image, Frames, EM.FPS)
 
         return Image
     end

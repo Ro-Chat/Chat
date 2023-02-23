@@ -25,7 +25,9 @@ Embed.new = function(xml)
         if Tag.Tag == "embed" then
             local Color = Tag.Color or Tag.Colour
             local Size = Tag.Size
-            EmbedData = EmbedUI.new({color = Color and Color3.fromRGB(Color.R, Color.G, Color.B) or Color.fromRGB(155, 0, 0)})
+            
+            EmbedData = EmbedUI.new({color = type(Color) == "userdata" and Color or type(Color) == "table" and Color3.fromRGB(Color.R, Color.G, Color.B) or Color.fromRGB(155, 0, 0)})
+
             local embed = EmbedData.instance
             if Size then
                 if Size[1] + 4 > Embed.ScrollingFrame.AbsoluteSize.Y then
@@ -47,6 +49,17 @@ Embed.new = function(xml)
                 type = "button",
                 color = Tag.Color or Tag.Colour,
                 text = Tag.Text
+            })
+        end
+        if Tag.Tag == "textlabel" or Tag.Tag == "label" then
+            Extra.new({
+                type = "label",
+                parent = EmbedData.instance.content,
+                order = #EmbedData.instance.content:GetChildren() + 1,
+                data = {
+                    color = Tag.Color or Tag.Colour,
+                    text = Tag.Text
+                }
             })
         end
     end

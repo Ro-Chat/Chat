@@ -31,6 +31,12 @@ return function(Release)
         Url = ROCHAT_Config.WSS
     })
 
+    local function getDataFromId(Id)
+        for _, Player in next, Chat.Players do
+            if Player.Id == Id then return Player end
+        end
+    end
+
     Client:OnRecieve(function(message)
         local Data = Utility:JSON(message)
         if Data.Type == "UI" then
@@ -41,6 +47,11 @@ return function(Release)
                 Embed.new(Data.Value)
             end
             if Data.SubType == "Chat" then
+                task.spawn(function()
+                    for _, Callback in next, Chat.OnChat.Callbacks do
+                        pcall(Callback, getDataFromId(Data.Id), Data)
+                    end
+                end)
                 Chat:CreateMessage(Data)
             end
         end
@@ -78,12 +89,6 @@ return function(Release)
             end
         end
     end)
-
-    local function getDataFromId(Id)
-        for _, Player in next, Chat.Players do
-            if Player.Id == Id then return Player end
-        end
-    end
 
     ROCHAT_Config.Client = Client
     ROCHAT_Config.Enabled = ROCHAT_Config.Enabled or true
@@ -198,21 +203,4 @@ return function(Release)
          end)
         end)
     end
-    -- local embed = Embed.new([[
-    -- <embed color="rgb(100, 100, 100)" width="500">
-    --     <button onclick="print('wow')" position="udim2(0, 0)">Button Example</button>
-    --     <button position="udim2(0, 24)">Button Example</button>
-    --     <textbox color="rgb(65, 65, 65)">TextBox Example</textbox>
-    --     <textlabel color="rgb(85, 85, 85)">TextLabel Example</textlabel>
-    -- </embed>
-    -- ]])
-    -- Chat:CreateMessage({
-    --     Message = "test *wow* :troll: :robux: :robux: :robux: :robux: :blob: :blob: :blob: __~~Emojiojsw~~__ :pepe_cringe: dwmdwa jwodojsw dwmdwa jwodojsw dwmdwa jwodojsw dwmdwa jwodojsw dwmdwa jwodojsw dwmdwa jwod",
-    --     Name = "Test",
-    --     Color = {
-    --         100,
-    --         100,
-    --         200
-    --     }
-    -- })
 end

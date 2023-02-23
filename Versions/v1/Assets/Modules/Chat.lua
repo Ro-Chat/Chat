@@ -4,6 +4,20 @@ local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 
 local Chat = {
+	OnChat = {
+		Callbacks = {}, 
+		Connect = function(self, func)
+			table.insert(self.Callbacks, func)
+			return {
+				Connected = true,
+				Idx = #self.Callbacks,
+				Disconnect = function(this)
+					this.Connected = false
+					table.remove(self.Callbacks, this.Idx)
+				end,
+			}
+		end
+	},
 	Players = {},
 	WhisperTo = nil,
     ScrollingFrame = nil,
@@ -80,11 +94,13 @@ local Chat = {
 			MessageMode.Size = UDim2.new(1, 0, 1, 0)
 			MessageMode.TextColor3 = Color3.fromRGB(unpack(data.Color or data.Colour))
 			MessageMode.Text = ("[To %s]"):format(data.Name)
-			task.wait(0.1)
+
 			local TextBounds = MessageMode.TextBounds
 			MessageMode.Size = UDim2.new(0, math.ceil(TextBounds.X), 1, 0)
+
 			self.ChatBar.Position = UDim2.new(0, math.ceil(TextBounds.X) + 4, 0, 0)
 			self.WhisperTo = data.Id
+
 			local Connection
 
 			Connection = MessageMode:GetPropertyChangedSignal("Text"):Connect(function()
@@ -99,8 +115,8 @@ local Chat = {
         local MessageContent = Instance.new("ScrollingFrame", Frame)
     	MessageContent.BackgroundTransparency = 1
     	MessageContent.Position = UDim2.new(0, 12 + TextSize.x, 0, 0)
-    	MessageContent.Size = UDim2.new(0, Frame.AbsoluteSize.X - TextSize.X, 0, 22)
-    	MessageContent.CanvasSize = UDim2.new(0, Frame.AbsoluteSize.X - TextSize.X, 0, 22)
+    	MessageContent.Size = UDim2.new(0, Frame.AbsoluteSize.X - TextSize.X, 0, 18)
+    	MessageContent.CanvasSize = UDim2.new(0, Frame.AbsoluteSize.X - TextSize.X, 0, 18)
     
     	local UIListLayout = Instance.new("UIListLayout", MessageContent)
     	UIListLayout.FillDirection = Enum.FillDirection.Horizontal
@@ -173,17 +189,18 @@ local Chat = {
     		if WordLabel.AbsolutePosition.X + WordLabel.AbsoluteSize.X + 16 > (MessageContent.AbsoluteSize.X + MessageContent.AbsolutePosition.X) then
     			
     			--> Add another line to the main frame
+				local BeforeLine = MessageContent
     			MessageContent = Instance.new("ScrollingFrame", Frame)
-    			MessageContent.Position = UDim2.new(0, 8, 0, Lines * 22)
-    			
-    			Lines = Lines + 1
-    			Frame.Size = UDim2.new(1, 0, 0, (Lines * 22))
+    			MessageContent.Position = UDim2.new(UDim.new(0, 8), BeforeLine.Position.Y + UDim.new(0, BeforeLine.AbsoluteSize.Y))
     			
     			--> Create a new line
     			
     			MessageContent.BackgroundTransparency = 1
-    			MessageContent.Size = UDim2.new(1, 0, 0, 22)
-    			MessageContent.CanvasSize = UDim2.new(0, 0, 0, 22)
+    			MessageContent.Size = UDim2.new(1, 0, 0, 18)
+    			MessageContent.CanvasSize = UDim2.new(0, 0, 0, 18)
+
+				Lines = Lines + 1
+    			Frame.Size = UDim2.new(UDim.new(1, 0), MessageContent.Position.Y + UDim.new(0, MessageContent.AbsoluteSize.Y))
     			
     			UIListLayout = Instance.new("UIListLayout", MessageContent)
     			UIListLayout.FillDirection = Enum.FillDirection.Horizontal

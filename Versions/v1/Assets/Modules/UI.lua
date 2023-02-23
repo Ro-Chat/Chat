@@ -170,22 +170,10 @@ Interact.new = function(data)
         Id = interact.id
     })
     interact.instance.LayoutOrder = interact.order or (#interact.parent:GetChildren() - 1)
-    -- Interaction.Interactions[interact.id] = interact
     return interact
 end
 
 local Embed = {}
-
---[[
-    Embed Arguments:
-      {
-        "title": "Embed Title Example",
-        "description": "Embed Description Example",
-        "image": "https://example.com/",
-        "color": Color.fromRGB(255, 0, 0),
-      }
-]]
-
 
 Embed.new = function(data)
     local _embed = {
@@ -248,6 +236,7 @@ Embed.new = function(data)
     return _embed
 end
 
+-- File browser button
 
 return {
     Interact = Interact,

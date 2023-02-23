@@ -12,7 +12,7 @@ function VideoPlayer.Append(self, val)
   -- self.Videos[1] = val
 end
 
-function VideoPlayer.ImagePlay(self, VideoName, ImageLabel, Images, FPS)
+function VideoPlayer.ImagePlay(self, Parent, VideoName, ImageLabel, Images, FPS)
   --  task.spawn(function()
     local Frame = 1
     local Frames = {}
@@ -29,7 +29,22 @@ function VideoPlayer.ImagePlay(self, VideoName, ImageLabel, Images, FPS)
     Frames = self.Frames[VideoName]
 
     local Img = ImageLib.new(readfile(Frames[1].Path))
-    ImageLabel.Size = UDim2.new(0, Img.WidthOffset * 22, 0, 22)
+    local LastHeight = Img.Height
+
+    if Img.Height > 50 then
+        ImageLabel.Size = UDim2.new(0, Img.WidthOffset * 50, 0, 50)
+        LastHeight = 50
+    else
+        ImageLabel.Size = UDim2.new(0, Img.Width, 0, Img.Height)
+    end
+
+    if Parent.AbsoluteSize.Y < LastHeight then
+      Parent.Size = UDim2.new(UDim.new(1, 0), UDim.new(0, LastHeight))
+      Parent.Parent.Size = Parent.Parent.Size + UDim2.new(0, 0, 0, LastHeight - 18)
+    end
+
+    -- Parent.Size = ImageLabel.Size
+    -- ImageLabel.Size = UDim2.new(0, Img.WidthOffset * 22, 0, 22)
 
     local Playing = true
 
@@ -58,7 +73,12 @@ function VideoPlayer.ImagePlay(self, VideoName, ImageLabel, Images, FPS)
 
           -- if FrameData then
           local Img = ImageLib.new(readfile(FrameData.Path))
-          ImageLabel.Size = UDim2.new(0, Img.WidthOffset * 22, 0, 22)
+
+          if Img.Height > LastHeight then
+            ImageLabel.Size = UDim2.new(0, Img.WidthOffset * LastHeight, 0, LastHeight)
+          else
+            ImageLabel.Size = UDim2.new(0, Img.Width, 0, Img.Height)
+          end
 
           Frame = Frame + 1
           ImageLabel.Image = FrameData.Asset
