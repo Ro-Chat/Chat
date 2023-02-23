@@ -16,16 +16,12 @@ task.spawn(function()
 
       if #Frames == 0 then
           for _, Frame in next, Emoji.Frames do
-              table.insert(Frames, Emoji.Url .. EmojiName .. "/" .. Frame)
+              table.insert(Frames, Cache:GetAsset(Emoji.Url .. EmojiName .. "/" .. Frame))
           end
       end
-      local CachedFrames = {}
-
-      for _, Frame in next, Frames do
-        table.insert(CachedFrames, Cache:GetAsset(Frame))
-      end
+       
       print("Successfully cached", EmojiName)
-      VideoPlayer.Frames[EmojiName] = CachedFrames
+      VideoPlayer.Frames[EmojiName] = Frames
     end
   end
 end)
