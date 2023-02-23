@@ -26,7 +26,10 @@ Emoji.MakeEmoji = function(parent, emoji)
             Image.Size = UDim2.new(0, Img.Width, 0, Img.Height)
         end
 
-        parent.Size = UDim2.new(UDim.new(1, 0), UDim.new(0, Height))
+        if parent.AbsoluteSize.Y < Height then
+            parent.Size = UDim2.new(UDim.new(1, 0), UDim.new(0, Height))
+            parent.Parent.Size = parent.Parent.Size + UDim2.new(0, 0, 0, Height - 18)
+        end
 
         writefile("RoChat/Emojis/" .. emoji .. ".png", ImgBuffer)
         Image.Image = GetAsset("RoChat/Emojis/" .. emoji .. ".png")
