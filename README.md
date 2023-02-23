@@ -21,8 +21,23 @@ getgenv().ROCHAT_Config = {
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Ro-Chat/Chat/main/Loader.lua"))()
 ```
+
+# TODO
+ - [ ] Webhosting
+ - [ ] UI
+   - [ ] Drawing library
+   - [ ] Custom chatbar
+     - [ ] File browser
+     - [ ] Emoji browser
+     - [ ] Autocorrect
+   - [ ] Context menu
+     - [ ] Reactions
+     - [ ] Delete message
+     - [ ] Edit message
+     - [ ] Reply
+     - [ ] Copy to clipboard
+ - [ ] Plugins
+
 # Documentation
  ### v1
  * [Emoji](/Documentation/v1/Emojis.md)
- * [Embed](/Documentation/v1/Embed.md)
- * [File Sharing](/Documentation/v1/FileSharing.md)
