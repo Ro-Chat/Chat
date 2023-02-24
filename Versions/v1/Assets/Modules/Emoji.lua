@@ -6,7 +6,7 @@ local Emoji = {
     PlayStack = {},
 }
 
-Emoji.MakeEmoji = function(parent, emoji)
+Emoji.MakeEmoji = function(parent, emoji, maxheight)
     local EM = ROCHAT_Config.Profile.Emojis[emoji]
     
     if EM.Type == "Image" then
@@ -20,11 +20,12 @@ Emoji.MakeEmoji = function(parent, emoji)
         
         Image.BackgroundTransparency = 1
         local Height = Img.Height
+        maxheight = maxheight or 32
 
-        if Img.Height > 32 then
+        if Img.Height > maxheight then
             Height = Img.Height / 2
-            if Height > 32 then
-                Height = 32
+            if Height > maxheight then
+                Height = maxheight
             end
         end
 
@@ -32,7 +33,7 @@ Emoji.MakeEmoji = function(parent, emoji)
 
         if parent.AbsoluteSize.Y < Height then
             parent.Size = UDim2.new(UDim.new(1, 0), UDim.new(0, Height))
-            parent.Parent.Size = parent.Parent.Size + UDim2.new(0, 0, 0, Height - 18)
+            parent.Parent.Size = parent.Parent.Size + UDim2.new(0, 0, 0, Height - 20)
         end
 
         Image.Image = ImageCache.Asset
@@ -58,7 +59,7 @@ Emoji.MakeEmoji = function(parent, emoji)
 
         Image.BackgroundTransparency = 1
 
-        VideoPlayer:ImagePlay(parent, emoji, Image, Frames, EM.FPS, 32)
+        VideoPlayer:ImagePlay(parent, emoji, Image, Frames, EM.FPS, maxheight or 32)
         -- end)
         return Image
     end

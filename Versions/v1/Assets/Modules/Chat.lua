@@ -2,7 +2,18 @@ local EmojiLib = Import("Emoji")
 
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
+local TextService = game:GetService("TextService")
 local UserInputService = game:GetService("UserInputService")
+
+local function countDict(dict)
+	local Count = 0
+
+	for _ in next, dict do
+		Count = Count + 1
+	end
+
+	return Count
+end
 
 local Chat = {
 	OnChat = {
@@ -69,17 +80,116 @@ local Chat = {
 	   return Order
 	end,
 	CreateReaction = function(self, data)
-		print(data)
+		local MessageData = self.Messages[data.MessageId]
+		local MessageFrame = MessageData.Frame
+		local ScrollingFrame = MessageFrame:FindFirstChild("Reaction")
+
+		if not ScrollingFrame then
+			ScrollingFrame = Instance.new("ScrollingFrame")
+			ScrollingFrame.BackgroundTransparency = 1
+			MessageFrame.Size = MessageFrame.Size + UDim2.new(0, 0, 0, 28)
+			local UIListLayout = Instance.new("UIListLayout", ScrollingFrame)
+			UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+			UIListLayout.FillDirection = Enum.FillDirection.Horizontal
+			UIListLayout.Padding = UDim.new(0, 5)
+
+			ScrollingFrame.Parent = MessageFrame
+			ScrollingFrame.Name = "Reaction"
+			ScrollingFrame.Size = UDim2.new(1, 0, 0, 35)
+			ScrollingFrame.CanvasSize = UDim2.new(1, 0, 0, 35)
+			ScrollingFrame.Position = UDim2.new(0, 8, 0.4, 0)
+
+			UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+				ScrollingFrame.CanvasSize = UDim2.new(0, UIListLayout.AbsoluteContentSize.X, 0, 26)
+			end)
+		end
+
+		if ScrollingFrame:FindFirstChild(data.Reaction) then
+			if MessageData.Reactions[data.Reaction][data.FromId] then return end
+			local Frame = ScrollingFrame:FindFirstChild(data.Reaction)
+			MessageData.Reactions[data.Reaction][data.FromId] = Frame
+			Frame.TextLabel.Text = tostring(countDict(MessageData.Reactions[data.Reaction]) + 1)
+			return
+		end
+
+		local Frame = Instance.new("Frame")
+		local Button = Instance.new("TextButton")
+		local UICorner = Instance.new("UICorner")
+		local TextLabel = Instance.new("TextLabel")
+
+		MessageData.Reactions[data.Reaction] = {
+			[data.FromId] = Frame
+		}
+
+		Frame.Name = data.Reaction
+		Frame.Parent = ScrollingFrame
+		Frame.BackgroundColor3 = Color3.fromRGB(43, 43, 43)
+		local ImageLabel = EmojiLib.MakeEmoji(Frame, data.Reaction, 16)
+		ImageLabel.Position = UDim2.new(0, 5, 0.159999996, 0)
+		Frame.Size = UDim2.new(0, ImageLabel.AbsoluteSize.X + 25, 0, 28)
+		Frame.LayoutOrder = #ScrollingFrame:GetChildren()
+
+		Button.Parent = Frame
+		Button.BackgroundTransparency = 1
+		Button.Text = ""
+		Button.Size = Frame.Size
+
+		Button.MouseButton1Down:Connect(function()
+			if MessageData.Reactions[data.Reaction][ROCHAT_Config.Id] then
+				ROCHAT_Config.Client:Send({
+					Type = "UI",
+					SubType = "RevokeReact",
+					Reaction = data.Reaction,
+					Id = data.MessageId
+				})
+			else
+				ROCHAT_Config.Client:Send({
+					Type = "UI",
+					SubType = "React",
+					Reaction = data.Reaction,
+					Id = data.MessageId
+				})
+			end
+		end)
+
+		UICorner.CornerRadius = UDim.new(0, 6)
+		UICorner.Parent = Frame
+
+		TextLabel.Parent = Frame
+		TextLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		TextLabel.BackgroundTransparency = 1.000
+		TextLabel.Position = UDim2.new(0, ImageLabel.AbsoluteSize.X + 12, 0.159999996, 0)
+		TextLabel.Size = UDim2.new(0, 6, 0, 16)
+		TextLabel.Font = Enum.Font.Ubuntu
+		TextLabel.TextColor3 = Color3.fromRGB(184, 185, 191)
+		TextLabel.TextSize = 16.000
+
+		local OldIncrement
+
+		TextLabel:GetPropertyChangedSignal("Text"):Connect(function()
+			-- TextLabel.Size = UDim2.new(2, 0, 0, 16)
+			local Increment = math.floor(math.log10(tonumber(TextLabel.Text)))
+			if Increment == OldIncrement then return end
+			OldIncrement = Increment
+			
+			TextLabel.Size = UDim2.new(0, 100, 0, 0)
+			local TextBounds = TextLabel.TextBounds
+			local X = (TextLabel.AbsolutePosition.X - Frame.AbsolutePosition.X) + TextBounds.X + 8
+			Frame.Size = UDim2.new(0, X, 0, 25)
+			TextLabel.Size = UDim2.new(0, TextBounds.X, 0, TextBounds.Y)
+		end)
+
+		TextLabel.Text = "1"
+		-- local ImageLabel = EmojiLib.MakeEmoji(MessageData.Frame, data.Reaction)
+
 	end,
+	ChatMode = "Chat",
+	EditingId = nil,
 	ContextMenuOptions = {
-		Edit = function(Data)
-			local Message = Data.Message
-			ROCHAT_Config.Client:Send({
-				Type = "UI",
-				SubType = "Edit",
-				Id = Data.MessageId,
-				Message = Message
-			})
+		Edit = function(Data, self)
+			self.ChatMode = "Edit"
+			self.ChatBar:CaptureFocus()
+			self.EditingId = Data.MessageId
 		end,
 		React = function(Data)
 			local ScreenGui = Instance.new("ScreenGui")
@@ -132,7 +242,7 @@ local Chat = {
 
 			local Count = 0
 			for Name in next, ROCHAT_Config.Profile.Emojis do
-				local Label = EmojiLib.MakeEmoji(ScrollingFrame, Name)
+				local Label = EmojiLib.MakeEmoji(ScrollingFrame, Name, 32)
 				Label.InputBegan:Connect(function(Input)
 					if Input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
 					ROCHAT_Config.Client:Send({
@@ -146,11 +256,11 @@ local Chat = {
 				if Count >= 15 then break end
 			end
 
-			Frame.MouseLeave:Connect(function()
+			Frame.MouseLeave:Once(function()
 				ScreenGui:Destroy()
 			end)
 		end,
-		Destroy = function(Data)
+		Delete = function(Data)
 			ROCHAT_Config.Client:Send({
 				Type = "UI",
 				SubType = "Destroy",
@@ -206,19 +316,19 @@ local Chat = {
 			TextButton.Size = UDim2.new(0, 154, 0, 30)
 			TextButton.Font = Enum.Font.SourceSansBold
 			TextButton.TextColor3 = Color3.fromRGB(222, 222, 222)
-			TextButton.TextSize = 16
+			TextButton.TextSize = 18
 			TextButton.TextStrokeColor3 = Color3.fromRGB(231, 231, 231)
 			TextButton.TextStrokeTransparency = 0.790
 			TextButton.TextWrapped = true
 			TextButton.Text = Option
 
-			TextButton.MouseButton1Down:Connect(function()
-				Callback(Data)
+			TextButton.MouseButton1Down:Once(function()
+				Callback(Data, self)
 				ScreenGui:Destroy()
 			end)
 		end
 
-		Frame.MouseLeave:Connect(function()
+		Frame.MouseLeave:Once(function()
 			ScreenGui:Destroy()
 		end)
 	end,
@@ -241,7 +351,10 @@ local Chat = {
 				Message = data.Message,
 				Id = data.MessageId,
 				Order = Frame.LayoutOrder,
-				Frame = Frame
+				Frame = Frame,
+				Color = data.Color or data.Colour,
+				Name = data.Name,
+				Reactions = {}
 			}
 		end
         
@@ -272,11 +385,8 @@ local Chat = {
 			self.ChatBar.Position = UDim2.new(0, math.ceil(TextBounds.X) + 4, 0, 0)
 			self.WhisperTo = data.Id
 
-			local Connection
-
-			Connection = MessageMode:GetPropertyChangedSignal("Text"):Connect(function()
+			MessageMode:GetPropertyChangedSignal("Text"):Once(function()
 				self.WhisperTo = nil
-				Connection:Disconnect()
 			end)
 		end)
 

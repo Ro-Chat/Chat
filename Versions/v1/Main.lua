@@ -37,26 +37,62 @@ return function(Release)
         end
     end
 
+    local function countDict(dict)
+        local Count = 0
+    
+        for _ in next, dict do
+            Count = Count + 1
+        end
+    
+        return Count
+    end
+
     Client:OnRecieve(function(message)
         local Data = Utility:JSON(message)
         print(message)
         if Data.Type == "UI" then
-            if Data.SubType == "Interact" then
-                Interact.Callbacks[Data.Id](Data.Value)
+            -- if Data.SubType == "Interact" then
+            --     Interact.Callbacks[Data.Id](Data.Value)
+            -- end
+            -- if Data.SubType == "Create" then
+            --     Embed.new(Data.Value)
+            -- end
+            if Data.SubType == "Destroy" then
+                local MessageData = Chat.Messages[Data.Id]
+                MessageData.Frame:Destroy()
             end
-            if Data.SubType == "Create" then
-                Embed.new(Data.Value)
+            if Data.SubType == "RevokeReact" then
+                local MessageData = Chat.Messages[Data.MessageId]
+                local Reaction = MessageData.Reactions[Data.Reaction]
+                local Frame = Reaction[Data.FromId]
+                if not Frame then return end
+                local ReactionCount = countDict(Reaction)
+                if countDict(Reaction) == 1 then
+                    MessageData.Reactions[Data.Reaction] = nil
+                    local ReactionFrame = Frame.Parent
+                    if countDict(MessageData.Reactions) == 0 then
+                        ReactionFrame.Parent.Size = ReactionFrame.Parent.Size - UDim2.new(0, 0, 0, 28)
+                        ReactionFrame:Destroy()
+                        return
+                    end
+                    Frame:Destroy()
+                    return
+                end
+                Reaction[Data.FromId] = nil
+                Frame.TextLabel.Text = ReactionCount
             end
             if Data.SubType == "React" then
                 Chat:CreateReaction(Data)
             end
             if Data.SubType == "Edit" then
-                local MessageData = Chat.Messages[Data.MessageId]
+                local MessageData = Chat.Messages[Data.Id]
                 local Order = MessageData.Frame.LayoutOrder
 
                 MessageData.Frame:Destroy()
                 MessageData.Order = Order
                 MessageData.Message = Data.Message
+                MessageData.MessageId = Data.Id
+                MessageData.Id = Data.From
 
                 Chat:CreateMessage(MessageData)
             end
@@ -136,26 +172,94 @@ return function(Release)
                 if not enter then return end
                 local Message = Chat.ChatBar.Text
                 if Message == "" then return end
-                if Message:sub(1, 1) ~= "/" then
-                    -- print(ROCHAT_Config.Profile.User.Name)
-                    if not Chat.WhisperTo then
-                        Client:Send({
-                            Type = "UI",
-                            SubType = "Chat",
-                            Message = Message,
-                        -- Name = ROCHAT_Config.Profile.User.Name,
-                        -- Color = ROCHAT_Config.Profile.User.Color
-                        })
-                    else
-                        Client:Send({
-                            Type = "UI",
-                            SubType = "Chat",
-                            To = Chat.WhisperTo,
-                            Message = Message
-                        })
-                    end
+                if Chat.ChatMode == "Edit" then
+                    ROCHAT_Config.Client:Send({
+                        Type = "UI",
+                        SubType = "Edit",
+                        Id = Chat.EditingId,
+                        Message = Message
+                    })
+                    Chat.ChatMode = "Chat"
                     Chat.ChatBar.Text = ""
+                    return
                 end
+                if Chat.ChatMode == "Chat" then
+                    if Message:sub(1, 1) ~= "/" then
+                        -- print(ROCHAT_Config.Profile.User.Name)
+                        if not Chat.WhisperTo then
+                            Client:Send({
+                                Type = "UI",
+                                SubType = "Chat",
+                                Message = Message,
+                            -- Name = ROCHAT_Config.Profile.User.Name,
+                            -- Color = ROCHAT_Config.Profile.User.Color
+                            })
+                        else
+                            Client:Send({
+                                Type = "UI",
+                                SubType = "Chat",
+                                To = Chat.WhisperTo,
+                                Message = Message
+                            })
+                        end
+                        Chat.ChatBar.Text = ""
+                    end
+                    local function runCommand(command, func)
+                        if Message:match("^/" .. command) then
+                            local Args = Message:split(" ")
+                            table.remove(Args, 1)
+                            func(unpack(Args))
+                        end
+                    end
+                    
+                    runCommand("disable", function()
+                        ROCHAT_Config.Enabled = false
+                        customConnection:Disconnect()
+                        Chat.ChatBar.Text = ""
+                        EnterConnection:Enable()
+                    end)
+                end
+            end)
+        end)
+    end)
+    if ROCHAT_Config.Enabled then
+        EnterConnection:Disable()
+        local customConnection;customConnection = Chat.ChatBar.FocusLost:Connect(function(enter)
+         Chat.ChatBar = Players.LocalPlayer.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar
+         if not enter then return end
+         local Message = Chat.ChatBar.Text
+         if Message == "" then return end
+         if Chat.ChatMode == "Edit" then
+            ROCHAT_Config.Client:Send({
+				Type = "UI",
+				SubType = "Edit",
+				Id = Chat.EditingId,
+				Message = Message
+			})
+            Chat.ChatMode = "Chat"
+            Chat.ChatBar.Text = ""
+            return
+         end
+         if Chat.ChatMode == "Chat" then
+            if Message:sub(1, 1) ~= "/" then
+                if not Chat.WhisperTo then
+                    Client:Send({
+                        Type = "UI",
+                        SubType = "Chat",
+                        Message = Message,
+                    -- Name = ROCHAT_Config.Profile.User.Name,
+                    -- Color = ROCHAT_Config.Profile.User.Color
+                    })
+                else
+                    Client:Send({
+                        Type = "UI",
+                        SubType = "Chat",
+                        To = Chat.WhisperTo,
+                        Message = Message
+                    })
+                end
+                Chat.ChatBar.Text = ""
+            end
                 local function runCommand(command, func)
                     if Message:match("^/" .. command) then
                         local Args = Message:split(" ")
@@ -170,50 +274,7 @@ return function(Release)
                     Chat.ChatBar.Text = ""
                     EnterConnection:Enable()
                 end)
-            end)
-            
-        end)
-    end)
-    if ROCHAT_Config.Enabled then
-        EnterConnection:Disable()
-        local customConnection;customConnection = Chat.ChatBar.FocusLost:Connect(function(enter)
-         Chat.ChatBar = Players.LocalPlayer.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar
-         if not enter then return end
-         local Message = Chat.ChatBar.Text
-         if Message == "" then return end
-         if Message:sub(1, 1) ~= "/" then
-            if not Chat.WhisperTo then
-                Client:Send({
-                    Type = "UI",
-                    SubType = "Chat",
-                    Message = Message,
-                -- Name = ROCHAT_Config.Profile.User.Name,
-                -- Color = ROCHAT_Config.Profile.User.Color
-                })
-            else
-                Client:Send({
-                    Type = "UI",
-                    SubType = "Chat",
-                    To = Chat.WhisperTo,
-                    Message = Message
-                })
             end
-            Chat.ChatBar.Text = ""
-         end
-         local function runCommand(command, func)
-             if Message:match("^/" .. command) then
-                 local Args = Message:split(" ")
-                 table.remove(Args, 1)
-                 func(unpack(Args))
-             end
-         end
-         
-         runCommand("disable", function()
-             ROCHAT_Config.Enabled = false
-             customConnection:Disconnect()
-             Chat.ChatBar.Text = ""
-             EnterConnection:Enable()
-         end)
         end)
     end
 end
