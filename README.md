@@ -35,7 +35,6 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Ro-Chat/Chat/main/Loa
      - [x] Reactions
      - [x] Delete message
      - [x] Edit message
-     - [ ] Reply
      - [x] Clipboard
  - [ ] Plugins
 
