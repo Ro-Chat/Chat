@@ -29,6 +29,4 @@ local Cache = {
     end
 }
 
-getgenv().Cache = Cache
-
 return Cache

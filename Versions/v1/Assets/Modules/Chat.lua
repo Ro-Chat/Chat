@@ -1,7 +1,8 @@
 local EmojiLib = Import("Emoji")
 
-local HttpService = game:GetService("HttpService")
+local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
 
 local Chat = {
 	OnChat = {
@@ -18,6 +19,7 @@ local Chat = {
 			}
 		end
 	},
+	Messages = {},
 	Players = {},
 	WhisperTo = nil,
     ScrollingFrame = nil,
@@ -66,13 +68,182 @@ local Chat = {
 	   end
 	   return Order
 	end,
+	CreateReaction = function(self, data)
+		print(data)
+	end,
+	ContextMenuOptions = {
+		Edit = function(Data)
+			local Message = Data.Message
+			ROCHAT_Config.Client:Send({
+				Type = "UI",
+				SubType = "Edit",
+				Id = Data.MessageId,
+				Message = Message
+			})
+		end,
+		React = function(Data)
+			local ScreenGui = Instance.new("ScreenGui")
+			local Frame = Instance.new("Frame")
+			local UICorner = Instance.new("UICorner")
+			local TextBox = Instance.new("TextBox")
+			local UICorner_2 = Instance.new("UICorner")
+			local ScrollingFrame = Instance.new("ScrollingFrame")
+			local UIGridLayout = Instance.new("UIGridLayout")
+
+			ScreenGui.Parent = CoreGui
+			
+			local Position = UserInputService:GetMouseLocation()
+
+			Frame.Parent = ScreenGui
+			Frame.BackgroundColor3 = Color3.fromRGB(31, 31, 31)
+			Frame.Position = UDim2.new(0, Position.X - 8, 0, Position.Y - 38)
+			Frame.Size = UDim2.new(0, 190, 0, 149)
+
+			UICorner.CornerRadius = UDim.new(0, 6)
+			UICorner.Parent = Frame
+
+			TextBox.Parent = Frame
+			TextBox.BackgroundColor3 = Color3.fromRGB(122, 122, 122)
+			TextBox.Position = UDim2.new(0.042105265, 0, 0.832214773, 0)
+			TextBox.Size = UDim2.new(0, 174, 0, 18)
+			TextBox.ClearTextOnFocus = false
+			TextBox.Font = Enum.Font.SourceSansBold
+			TextBox.PlaceholderColor3 = Color3.fromRGB(255, 255, 255)
+			TextBox.PlaceholderText = "Filter emojis"
+			TextBox.Text = ""
+			TextBox.TextColor3 = Color3.fromRGB(0, 0, 0)
+			TextBox.TextSize = 14.000
+
+			UICorner_2.Parent = TextBox
+
+			ScrollingFrame.Parent = Frame
+			ScrollingFrame.Active = true
+			ScrollingFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			ScrollingFrame.BackgroundTransparency = 1.000
+			ScrollingFrame.BorderColor3 = Color3.fromRGB(172, 172, 172)
+			ScrollingFrame.Position = UDim2.new(0.042105265, 0, 0.0402684547, 0)
+			ScrollingFrame.Size = UDim2.new(0, 174, 0, 119)
+			ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 119)
+
+			UIGridLayout.Parent = ScrollingFrame
+			UIGridLayout.SortOrder = Enum.SortOrder.LayoutOrder
+			UIGridLayout.CellPadding = UDim2.new(0, 3, 0, 5)
+			UIGridLayout.CellSize = UDim2.new(0, 32, 0, 32)
+
+			local Count = 0
+			for Name in next, ROCHAT_Config.Profile.Emojis do
+				local Label = EmojiLib.MakeEmoji(ScrollingFrame, Name)
+				Label.InputBegan:Connect(function(Input)
+					if Input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
+					ROCHAT_Config.Client:Send({
+						Type = "UI",
+						SubType = "React",
+						Reaction = Name,
+						Id = Data.MessageId
+					})
+					ScreenGui:Destroy()
+				end)
+				if Count >= 15 then break end
+			end
+
+			Frame.MouseLeave:Connect(function()
+				ScreenGui:Destroy()
+			end)
+		end,
+		Destroy = function(Data)
+			ROCHAT_Config.Client:Send({
+				Type = "UI",
+				SubType = "Destroy",
+				Id = Data.MessageId
+			})
+		end,
+		Copy = function(Data)
+			setclipboard(Data.Message)
+		end,
+	},
+	CreateContextMenu = function(self, Data, x, y)
+		local ScreenGui = Instance.new("ScreenGui")
+		local Frame = Instance.new("Frame")
+		local UICorner = Instance.new("UICorner")
+		local ScrollingFrame = Instance.new("ScrollingFrame")
+		local UIListLayout = Instance.new("UIListLayout")
+
+		ScreenGui.Parent = CoreGui
+		ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+		Frame.Parent = ScreenGui
+		Frame.BackgroundColor3 = Color3.fromRGB(31, 31, 31)
+		Frame.Position = UDim2.new(0, x, 0, y)
+		Frame.Size = UDim2.new(0, 154, 0, 243)
+
+		UICorner.CornerRadius = UDim.new(0, 6)
+		UICorner.Parent = Frame
+
+		ScrollingFrame.Parent = Frame
+		ScrollingFrame.Active = true
+		ScrollingFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		ScrollingFrame.BackgroundTransparency = 1.000
+		ScrollingFrame.Size = UDim2.new(0, 154, 0, 243)
+
+		Frame.Size = UDim2.new(0, 154, 0, UIListLayout.AbsoluteContentSize.Y)
+		ScrollingFrame.CanvasSize = UDim2.new(1, 0, 0, UIListLayout.AbsoluteContentSize.Y)
+
+		UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+			Frame.Size = UDim2.new(0, 154, 0, UIListLayout.AbsoluteContentSize.Y)
+			ScrollingFrame.CanvasSize = UDim2.new(1, 0, 0, UIListLayout.AbsoluteContentSize.Y)
+		end)
+
+		UIListLayout.Parent = ScrollingFrame
+		UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+		for Option, Callback in next, self.ContextMenuOptions do
+			local TextButton = Instance.new("TextButton")
+
+			TextButton.Parent = ScrollingFrame
+			TextButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			TextButton.BackgroundTransparency = 1.000
+			TextButton.BorderSizePixel = 0
+			TextButton.Size = UDim2.new(0, 154, 0, 30)
+			TextButton.Font = Enum.Font.SourceSansBold
+			TextButton.TextColor3 = Color3.fromRGB(222, 222, 222)
+			TextButton.TextSize = 16
+			TextButton.TextStrokeColor3 = Color3.fromRGB(231, 231, 231)
+			TextButton.TextStrokeTransparency = 0.790
+			TextButton.TextWrapped = true
+			TextButton.Text = Option
+
+			TextButton.MouseButton1Down:Connect(function()
+				Callback(Data)
+				ScreenGui:Destroy()
+			end)
+		end
+
+		Frame.MouseLeave:Connect(function()
+			ScreenGui:Destroy()
+		end)
+	end,
     CreateMessage = function(self, data)
         local ScrollingFrame = self.ScrollingFrame
-
         local Frame = Instance.new("Frame", ScrollingFrame)
-        Frame.LayoutOrder = self:GetOrder()
+        Frame.LayoutOrder = data.Order or self:GetOrder()
         Frame.BackgroundTransparency = 1
         Frame.Size = UDim2.new(1, 0, 0, 22)
+		Frame.InputBegan:Connect(function(input)
+			if input.UserInputType ~= Enum.UserInputType.MouseButton2 then return end
+			local Position = UserInputService:GetMouseLocation()
+			-- Create context menu
+			self:CreateContextMenu(data, Position.X - 8, Position.Y - 38)
+		end)
+
+		if data.MessageId then 
+			self.Messages[data.MessageId] = {
+				From = data.Id,
+				Message = data.Message,
+				Id = data.MessageId,
+				Order = Frame.LayoutOrder,
+				Frame = Frame
+			}
+		end
         
         local NameTag = Instance.new("TextButton", Frame)
 		if data.To then
@@ -186,7 +357,6 @@ local Chat = {
     		end
 
     		--> Check if word goes outside of the line
-			print(WordLabel.AbsolutePosition.X + WordLabel.AbsoluteSize.X, MessageContent.AbsoluteSize.X + MessageContent.AbsolutePosition.X - 18)
     		if WordLabel.AbsolutePosition.X + WordLabel.AbsoluteSize.X + (Emoji and 32 or 0) > MessageContent.AbsoluteSize.X + MessageContent.AbsolutePosition.X - 18 then
     			
     			--> Add another line to the main frame

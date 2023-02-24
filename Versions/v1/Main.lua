@@ -39,12 +39,26 @@ return function(Release)
 
     Client:OnRecieve(function(message)
         local Data = Utility:JSON(message)
+        print(message)
         if Data.Type == "UI" then
             if Data.SubType == "Interact" then
                 Interact.Callbacks[Data.Id](Data.Value)
             end
             if Data.SubType == "Create" then
                 Embed.new(Data.Value)
+            end
+            if Data.SubType == "React" then
+                Chat:CreateReaction(Data)
+            end
+            if Data.SubType == "Edit" then
+                local MessageData = Chat.Messages[Data.MessageId]
+                local Order = MessageData.Frame.LayoutOrder
+
+                MessageData.Frame:Destroy()
+                MessageData.Order = Order
+                MessageData.Message = Data.Message
+
+                Chat:CreateMessage(MessageData)
             end
             if Data.SubType == "Chat" then
                 task.spawn(function()
@@ -84,7 +98,6 @@ return function(Release)
                 ROCHAT_Config.Id = Data.Id
                 ROCHAT_Config.Server = {
                     MessageLogs = Data.MessageLogs,
-                    Name = Data.Name
                 }
             end
         end

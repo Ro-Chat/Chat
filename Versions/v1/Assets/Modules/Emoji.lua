@@ -1,5 +1,4 @@
 local ImageLib = Import("Image")
-Import("Cache")
 Import("VideoPlayer")
 
 local Emoji = {
