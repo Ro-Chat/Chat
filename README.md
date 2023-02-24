@@ -31,11 +31,12 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Ro-Chat/Chat/main/Loa
      - [ ] Emoji browser
      - [ ] Autocorrect
   - [ ] Context menu
-     - [ ] Reactions
-     - [ ] Delete message
-     - [ ] Edit message
+     - [ ] Better UI
+     - [x] Reactions
+     - [x] Delete message
+     - [x] Edit message
      - [ ] Reply
-     - [ ] Clipboard
+     - [x] Clipboard
  - [ ] Plugins
 
 # Documentation
