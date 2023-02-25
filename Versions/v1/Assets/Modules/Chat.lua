@@ -97,7 +97,7 @@ local Chat = {
 			ScrollingFrame.Name = "Reaction"
 			ScrollingFrame.Size = UDim2.new(1, 0, 0, 35)
 			ScrollingFrame.CanvasSize = UDim2.new(1, 0, 0, 35)
-			ScrollingFrame.Position = UDim2.new(0, 8, 0.4, 0)
+			ScrollingFrame.Position = UDim2.new(0, 8, 0, MessageFrame.AbsoluteSize.Y - 28)
 
 			UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 				ScrollingFrame.CanvasSize = UDim2.new(0, UIListLayout.AbsoluteContentSize.X, 0, 26)
