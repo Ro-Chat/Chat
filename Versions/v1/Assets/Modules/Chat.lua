@@ -107,8 +107,8 @@ local Chat = {
 		if ScrollingFrame:FindFirstChild(data.Reaction) then
 			if MessageData.Reactions[data.Reaction][data.FromId] then return end
 			local Frame = ScrollingFrame:FindFirstChild(data.Reaction)
-			MessageData.Reactions[data.Reaction][data.FromId] = Frame
 			Frame.TextLabel.Text = tostring(countDict(MessageData.Reactions[data.Reaction]) + 1)
+			MessageData.Reactions[data.Reaction][data.FromId] = Frame
 			return
 		end
 
@@ -142,14 +142,14 @@ local Chat = {
 					Reaction = data.Reaction,
 					Id = data.MessageId
 				})
-			else
-				ROCHAT_Config.Client:Send({
-					Type = "UI",
-					SubType = "React",
-					Reaction = data.Reaction,
-					Id = data.MessageId
-				})
+				return
 			end
+			ROCHAT_Config.Client:Send({
+				Type = "UI",
+				SubType = "React",
+				Reaction = data.Reaction,
+				Id = data.MessageId
+			})
 		end)
 
 		UICorner.CornerRadius = UDim.new(0, 6)
@@ -514,5 +514,8 @@ local Chat = {
     	end
     end
 }
+
+Chat.Chat = Chat.CreateMessage
+Chat.React = Chat.CreateReaction
 
 return Chat

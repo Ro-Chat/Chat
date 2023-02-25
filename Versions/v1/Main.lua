@@ -49,7 +49,7 @@ return function(Release)
 
     Client:OnRecieve(function(message)
         local Data = Utility:JSON(message)
-        print(message)
+        -- print(message)
         if Data.Type == "UI" then
             -- if Data.SubType == "Interact" then
             --     Interact.Callbacks[Data.Id](Data.Value)

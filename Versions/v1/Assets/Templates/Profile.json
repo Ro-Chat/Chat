@@ -5,7 +5,17 @@
         "Description": "No description has been set."
     },
     "Settings": {
-        "MaxAnimatedEmojis": 2
+        "MaxAnimatedEmojis": 2,
+        "TrustedSites": [
+            "www.google.com",
+            "www.imgur.com",
+            "i.imgur.com",
+            "raw.githubusercontent.com",
+            "www.gyazo.com",
+            "i.gyazo.com",
+            "www.reddit.com",
+            "i.redd.it"
+        ]
     },
     "Emojis": {
         "guh": {
