@@ -31,6 +31,7 @@ function makeDirectories(dirs)
         makefolder("RoChat")
     end
     for i, dir in next, dirs do
+        if isfolder("RoChat/" .. dir) then continue end
         makefolder("RoChat/" .. dir)
     end
 end
@@ -64,12 +65,16 @@ else
         ProfileTemplate = game:HttpGet(("https://raw.githubusercontent.com/Ro-Chat/Chat/main/%s"):format(ProfileTemplate:sub(8, #ProfileTemplate)))
     end
     
+    -- print(ProfileTemplate)
+    
     local Template = makeTemplate(ProfileTemplate, {
         Name = Players.LocalPlayer.DisplayName,
         Red = math.random(100, 255),
         Green = math.random(100, 255),
         Blue = math.random(100, 255),
     })
+    
+    -- print(Template)
     
     ROCHAT_Config.Profile = HttpService:JSONDecode(Template)
     writefile(ProfilePath, Template)
