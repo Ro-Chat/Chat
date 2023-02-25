@@ -37,6 +37,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Ro-Chat/Chat/main/Loa
      - [x] Edit message
      - [x] Clipboard
  - [ ] Plugins
+ - [ ] Emoji repo store
 
 # Documentation
  ### v1
