@@ -32,6 +32,8 @@ local Chat = {
 	},
 	Messages = {},
 	Players = {},
+	CurrentChannel = 0,
+	Channels = {},
 	WhisperTo = nil,
     ScrollingFrame = nil,
 	ChatBar = nil,
@@ -185,79 +187,101 @@ local Chat = {
 	end,
 	ChatMode = "Chat",
 	EditingId = nil,
+	EmojiWindow = function(callback, ...)
+		local ScreenGui = Instance.new("ScreenGui")
+		local Frame = Instance.new("Frame")
+		local UICorner = Instance.new("UICorner")
+		local TextBox = Instance.new("TextBox")
+		local UICorner_2 = Instance.new("UICorner")
+		local ScrollingFrame = Instance.new("ScrollingFrame")
+		local UIGridLayout = Instance.new("UIGridLayout")
+
+		ScreenGui.Parent = CoreGui
+		
+		local Position = UserInputService:GetMouseLocation()
+
+		Frame.Parent = ScreenGui
+		Frame.BackgroundColor3 = Color3.fromRGB(31, 31, 31)
+		Frame.Position = UDim2.new(0, Position.X - 8, 0, Position.Y - 38)
+		Frame.Size = UDim2.new(0, 190, 0, 149)
+
+		UICorner.CornerRadius = UDim.new(0, 6)
+		UICorner.Parent = Frame
+
+		TextBox.Parent = Frame
+		TextBox.BackgroundColor3 = Color3.fromRGB(122, 122, 122)
+		TextBox.Position = UDim2.new(0.042105265, 0, 0.832214773, 0)
+		TextBox.Size = UDim2.new(0, 174, 0, 18)
+		TextBox.ClearTextOnFocus = false
+		TextBox.Font = Enum.Font.SourceSansBold
+		TextBox.PlaceholderColor3 = Color3.fromRGB(255, 255, 255)
+		TextBox.PlaceholderText = "Filter emojis"
+		TextBox.Text = ""
+		TextBox.TextColor3 = Color3.fromRGB(200, 200, 200)
+		TextBox.TextSize = 14.000
+
+		UICorner_2.Parent = TextBox
+
+		ScrollingFrame.Parent = Frame
+		ScrollingFrame.Active = true
+		ScrollingFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		ScrollingFrame.BackgroundTransparency = 1.000
+		ScrollingFrame.BorderColor3 = Color3.fromRGB(172, 172, 172)
+		ScrollingFrame.Position = UDim2.new(0.042105265, 0, 0.0402684547, 0)
+		ScrollingFrame.Size = UDim2.new(0, 174, 0, 119)
+		ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 119)
+
+		UIGridLayout.Parent = ScrollingFrame
+		UIGridLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		UIGridLayout.CellPadding = UDim2.new(0, 3, 0, 5)
+		UIGridLayout.CellSize = UDim2.new(0, 32, 0, 32)
+
+		local Count = 0
+		local Emojis = ROCHAT_Config.Profile.Emojis
+		local Args = {...}
+
+		local function MakeEmojis(Amount, Filter)
+			for _, Child in next, ScrollingFrame:GetChildren() do
+				if Child.Name ~= "ImageLabel" then continue end
+				Child:Destroy()
+			end
+			for Name in next, Emojis do
+				if Filter and not Name:match("^" .. Filter) then continue end
+				local Label = EmojiLib.MakeEmoji(ScrollingFrame, Name, 32)
+				Label.InputBegan:Connect(function(Input)
+					if Input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
+					callback(Name, unpack(Args))
+					ScreenGui:Destroy()
+				end)
+				if Count >= Amount then break end
+			end
+		end
+
+		MakeEmojis(15)
+
+		TextBox.FocusLost:Connect(function(isEnter)
+			if not isEnter then return end
+			MakeEmojis(15, TextBox.Text)
+		end)
+
+		Frame.MouseLeave:Once(function()
+			ScreenGui:Destroy()
+		end)
+	end,
 	ContextMenuOptions = {
 		Edit = function(Data, self)
 			self.ChatMode = "Edit"
 			self.ChatBar:CaptureFocus()
 			self.EditingId = Data.MessageId
 		end,
-		React = function(Data)
-			local ScreenGui = Instance.new("ScreenGui")
-			local Frame = Instance.new("Frame")
-			local UICorner = Instance.new("UICorner")
-			local TextBox = Instance.new("TextBox")
-			local UICorner_2 = Instance.new("UICorner")
-			local ScrollingFrame = Instance.new("ScrollingFrame")
-			local UIGridLayout = Instance.new("UIGridLayout")
-
-			ScreenGui.Parent = CoreGui
-			
-			local Position = UserInputService:GetMouseLocation()
-
-			Frame.Parent = ScreenGui
-			Frame.BackgroundColor3 = Color3.fromRGB(31, 31, 31)
-			Frame.Position = UDim2.new(0, Position.X - 8, 0, Position.Y - 38)
-			Frame.Size = UDim2.new(0, 190, 0, 149)
-
-			UICorner.CornerRadius = UDim.new(0, 6)
-			UICorner.Parent = Frame
-
-			TextBox.Parent = Frame
-			TextBox.BackgroundColor3 = Color3.fromRGB(122, 122, 122)
-			TextBox.Position = UDim2.new(0.042105265, 0, 0.832214773, 0)
-			TextBox.Size = UDim2.new(0, 174, 0, 18)
-			TextBox.ClearTextOnFocus = false
-			TextBox.Font = Enum.Font.SourceSansBold
-			TextBox.PlaceholderColor3 = Color3.fromRGB(255, 255, 255)
-			TextBox.PlaceholderText = "Filter emojis"
-			TextBox.Text = ""
-			TextBox.TextColor3 = Color3.fromRGB(0, 0, 0)
-			TextBox.TextSize = 14.000
-
-			UICorner_2.Parent = TextBox
-
-			ScrollingFrame.Parent = Frame
-			ScrollingFrame.Active = true
-			ScrollingFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-			ScrollingFrame.BackgroundTransparency = 1.000
-			ScrollingFrame.BorderColor3 = Color3.fromRGB(172, 172, 172)
-			ScrollingFrame.Position = UDim2.new(0.042105265, 0, 0.0402684547, 0)
-			ScrollingFrame.Size = UDim2.new(0, 174, 0, 119)
-			ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 119)
-
-			UIGridLayout.Parent = ScrollingFrame
-			UIGridLayout.SortOrder = Enum.SortOrder.LayoutOrder
-			UIGridLayout.CellPadding = UDim2.new(0, 3, 0, 5)
-			UIGridLayout.CellSize = UDim2.new(0, 32, 0, 32)
-
-			local Count = 0
-			for Name in next, ROCHAT_Config.Profile.Emojis do
-				local Label = EmojiLib.MakeEmoji(ScrollingFrame, Name, 32)
-				Label.InputBegan:Connect(function(Input)
-					if Input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
-					ROCHAT_Config.Client:Send({
-						Type = "UI",
-						SubType = "React",
-						Reaction = Name,
-						Id = Data.MessageId
-					})
-					ScreenGui:Destroy()
-				end)
-				if Count >= 15 then break end
-			end
-
-			Frame.MouseLeave:Once(function()
-				ScreenGui:Destroy()
+		React = function(Data, self)
+			self.EmojiWindow(function(Reaction)
+				ROCHAT_Config.Client:Send({
+					Type = "UI",
+					SubType = "React",
+					Reaction = Reaction,
+					Id = Data.MessageId
+				})
 			end)
 		end,
 		Delete = function(Data)

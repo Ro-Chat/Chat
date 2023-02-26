@@ -19,8 +19,6 @@ return function(Release)
         return result
     end
 
-    getgenv().Cache = Import("Cache")
-
     local Players = game:GetService("Players")
 
     local Chat    = Import("Chat")
@@ -67,7 +65,7 @@ return function(Release)
                 local Frame = Reaction[Data.FromId]
                 if not Frame then return end
                 local ReactionCount = countDict(Reaction)
-                if countDict(Reaction) == 1 then
+                if ReactionCount == 1 then
                     MessageData.Reactions[Data.Reaction] = nil
                     local ReactionFrame = Frame.Parent
                     if countDict(MessageData.Reactions) == 0 then
@@ -218,6 +216,14 @@ return function(Release)
                         Chat.ChatBar.Text = ""
                         EnterConnection:Enable()
                     end)
+
+                    runCommand("redeem", function(key)
+                        ROCHAT_Config.Client:Send({
+                            Type = "Rank",
+                            SubType = "RedeemOwner",
+                            Key = key
+                        })
+                    end)
                 end
             end)
         end)
@@ -273,6 +279,14 @@ return function(Release)
                     customConnection:Disconnect()
                     Chat.ChatBar.Text = ""
                     EnterConnection:Enable()
+                end)
+
+                runCommand("redeem", function(key)
+                    ROCHAT_Config.Client:Send({
+                        Type = "Rank",
+                        SubType = "RedeemOwner",
+                        Key = key
+                    })
                 end)
             end
         end)
