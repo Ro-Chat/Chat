@@ -1,3 +1,4 @@
+
 ------------------------------------------------------------------------
 -- ooooooooo.               .oooooo.   oooo                      .    --
 -- `888   `Y88.            d8P'  `Y8b  `888                    .o8    --
@@ -21,6 +22,7 @@
 local HttpService = game:GetService("HttpService")
 local Players     = game:GetService("Players")
 
+local Request = syn.request or http and request
 local Release = debug.getinfo(2)
 local Path    = Release and "https://raw.githubusercontent.com/Ro-Chat/Chat/main/" or "RoChat/"
 
@@ -72,6 +74,7 @@ else
         Red = math.random(100, 255),
         Green = math.random(100, 255),
         Blue = math.random(100, 255),
+        Fingerprint = Fingerprint
     })
     
     -- print(Template)
@@ -81,5 +84,17 @@ else
 end
 
 local MainPath = Path .. "Versions/" .. ROCHAT_Config.Version .. "/Main.lua"
+
+local Headers = HttpService:JSONDecode(Request({
+    Method = "GET",
+    Url = "https://rocat.000webhostapp.com/headers.php"
+}).Body:gsub("\",}", "\"}"))
+
+for Header, Value in next, Headers do
+    if Header:lower():match("fingerprint") or Header:lower():match("hwid") then
+        getgenv().Fingerprint = Value
+        break
+    end
+end
 
 loadstring(not Release and readfile(MainPath) or game:HttpGet(MainPath))()(Release)
