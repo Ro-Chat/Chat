@@ -31,6 +31,7 @@ return function(Release)
 
     local function getDataFromId(Id)
         for _, Player in next, Chat.Players do
+            table.foreach(Player, print)
             if Player.Id == Id then return Player end
         end
     end
@@ -84,10 +85,9 @@ return function(Release)
             end
             if Data.SubType == "Edit" then
                 local MessageData = Chat.Messages[Data.Id]
-                local Order = MessageData.Frame.LayoutOrder
 
+                MessageData.Order = MessageData.Order
                 MessageData.Frame:Destroy()
-                MessageData.Order = Order
                 MessageData.Message = Data.Message
                 MessageData.MessageId = Data.Id
                 MessageData.Id = Data.From
@@ -105,6 +105,8 @@ return function(Release)
         end
         if Data.Type == "Connection" then
             if Data.SubType == "Join" then
+                Data.Type = nil
+                Data.SubType = nil
                 table.insert(Chat.Players, Data)
                 Chat:CreateMessage({
                     Name = "System",
@@ -121,7 +123,12 @@ return function(Release)
                     if Player.Id == Data.Id then
                         Chat:CreateMessage({
                             Name = "System",
-                            Message = ("@%s left the server."):format(Player.Name)
+                            Message = ("@%s left the server."):format(Player.Name),
+                            Color = {
+                                80,
+                                80,
+                                80
+                            }
                         })
                         table.remove(Chat.Players, Idx)
                         break
@@ -132,7 +139,39 @@ return function(Release)
                 ROCHAT_Config.Id = Data.Id
                 ROCHAT_Config.Server = {
                     MessageLogs = Data.MessageLogs,
+                    Metadata = Data.Metadata
                 }
+
+                Chat.Channels = Data.Channels
+                Chat.Ranks = Data.Metadata.Ranks
+                Chat.Channels["Default"] = {
+                    Id = -1,
+                    Name = "Default",
+                    Description = "This is the default chat used by roblox.",
+                    Ranks = {},
+                    Messages = {},
+                    -- Icon = 
+                }
+
+                for _, Channel in next, Data.Channels do
+                    Chat:CreateChannel(Channel)
+                end
+            end
+        end
+        if Data.Type == "Rank" then
+            if Data.SubType == "Set" then
+                for _, Rank in next, Chat.Ranks do
+                    if Rank.Name == Data.Rank then
+                        table.insert(Rank.Fingerprints, Data.Fingerprint)
+                    end
+                end
+            end
+            if Data.SubType == "Remove" then
+                for _, Rank in next, Chat.Ranks do
+                    if Rank.Name == Data.Rank then
+                        table.remove(Rank.Fingerprints, table.find(Rank.Fingerprints, Data.Fingerprint))
+                    end
+                end
             end
         end
     end)
@@ -151,103 +190,38 @@ return function(Release)
     Embed.ScrollingFrame = Chat.ScrollingFrame
 
     local EnterConnection = getconnections(Chat.ChatBar.FocusLost)[1]
-    
-    Players.LocalPlayer.Chatted:Connect(function(Message)
-        Chat.ChatBar = Players.LocalPlayer.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar
-        local function runCommand(command, func)
-            if Message:match("^/" .. command) then
-                local Args = Message:split(" ")
-                table.remove(Args, 1)
-                func(unpack(Args))
+    local customConnection
+
+    local function getPlayer(name)
+        if name == "me" then
+            return getDataFromId(ROCHAT_Config.Id)
+        end
+        for _, Player in next, Chat.Players do
+            if Player.Name:match(("^%s"):format(name)) then
+                return Player
             end
         end
-        
-        runCommand("enable", function()
-            ROCHAT_Config.Enabled = true
-            Chat.ChatBar.Text = ""
-            EnterConnection:Disable()
-            local customConnection;customConnection = Chat.ChatBar.FocusLost:Connect(function(enter)
-                if not enter then return end
-                local Message = Chat.ChatBar.Text
-                if Message == "" then return end
-                if Chat.ChatMode == "Edit" then
-                    ROCHAT_Config.Client:Send({
-                        Type = "UI",
-                        SubType = "Edit",
-                        Id = Chat.EditingId,
-                        Message = Message
-                    })
-                    Chat.ChatMode = "Chat"
-                    Chat.ChatBar.Text = ""
-                    return
-                end
-                if Chat.ChatMode == "Chat" then
-                    if Message:sub(1, 1) ~= "/" then
-                        -- print(ROCHAT_Config.Profile.User.Name)
-                        if not Chat.WhisperTo then
-                            Client:Send({
-                                Type = "UI",
-                                SubType = "Chat",
-                                Message = Message,
-                            -- Name = ROCHAT_Config.Profile.User.Name,
-                            -- Color = ROCHAT_Config.Profile.User.Color
-                            })
-                        else
-                            Client:Send({
-                                Type = "UI",
-                                SubType = "Chat",
-                                To = Chat.WhisperTo,
-                                Message = Message
-                            })
-                        end
-                        Chat.ChatBar.Text = ""
-                    end
-                    local function runCommand(command, func)
-                        if Message:match("^/" .. command) then
-                            local Args = Message:split(" ")
-                            table.remove(Args, 1)
-                            func(unpack(Args))
-                        end
-                    end
-                    
-                    runCommand("disable", function()
-                        ROCHAT_Config.Enabled = false
-                        customConnection:Disconnect()
-                        Chat.ChatBar.Text = ""
-                        EnterConnection:Enable()
-                    end)
+    end
 
-                    runCommand("redeem", function(key)
-                        ROCHAT_Config.Client:Send({
-                            Type = "Rank",
-                            SubType = "RedeemOwner",
-                            Key = key
-                        })
-                    end)
-                end
-            end)
-        end)
-    end)
-    if ROCHAT_Config.Enabled then
-        EnterConnection:Disable()
-        local customConnection;customConnection = Chat.ChatBar.FocusLost:Connect(function(enter)
-         Chat.ChatBar = Players.LocalPlayer.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar
-         if not enter then return end
-         local Message = Chat.ChatBar.Text
-         if Message == "" then return end
-         if Chat.ChatMode == "Edit" then
+    function FocusLost(enter)
+        if not enter then return end
+        local Message = Chat.ChatBar.Text
+        if Message == "" then return end
+        if Chat.ChatMode == "Edit" then
             ROCHAT_Config.Client:Send({
-				Type = "UI",
-				SubType = "Edit",
-				Id = Chat.EditingId,
-				Message = Message
-			})
+                Type = "UI",
+                SubType = "Edit",
+                Id = Chat.EditingId,
+                Message = Message
+            })
             Chat.ChatMode = "Chat"
             Chat.ChatBar.Text = ""
             return
-         end
-         if Chat.ChatMode == "Chat" then
+        end
+
+        if Chat.ChatMode == "Chat" then
             if Message:sub(1, 1) ~= "/" then
+                -- print(ROCHAT_Config.Profile.User.Name)
                 if not Chat.WhisperTo then
                     Client:Send({
                         Type = "UI",
@@ -264,31 +238,85 @@ return function(Release)
                         Message = Message
                     })
                 end
-                Chat.ChatBar.Text = ""
             end
-                local function runCommand(command, func)
-                    if Message:match("^/" .. command) then
-                        local Args = Message:split(" ")
-                        table.remove(Args, 1)
-                        func(unpack(Args))
-                    end
-                end
-                
-                runCommand("disable", function()
-                    ROCHAT_Config.Enabled = false
-                    customConnection:Disconnect()
-                    Chat.ChatBar.Text = ""
-                    EnterConnection:Enable()
-                end)
 
-                runCommand("redeem", function(key)
+            local function runCommand(command, func)
+                if Message:match("^/" .. command) then
+                    local Args = Message:split(" ")
+                    table.remove(Args, 1)
+                    func(unpack(Args))
+                end
+            end
+            
+            runCommand("disable", function()
+                ROCHAT_Config.Enabled = false
+                customConnection:Disconnect()
+                Chat.ChatBar.Text = ""
+                EnterConnection:Enable()
+            end)
+
+            runCommand("redeem", function(key)
+                ROCHAT_Config.Client:Send({
+                    Type = "Rank",
+                    SubType = "RedeemOwner",
+                    Key = key
+                })
+            end)
+
+            runCommand("leave", function()
+                ROCHAT_Config.Client:Close()
+                ROCHAT_Config.Enabled = false
+                customConnection:Disconnect()
+                Chat.ChatBar.Text = ""
+                EnterConnection:Enable()
+            end)
+
+            runCommand("rank", function(mode, who, rank)
+                if mode:lower() == "set" then
+                    local Player = getPlayer(who)
                     ROCHAT_Config.Client:Send({
                         Type = "Rank",
-                        SubType = "RedeemOwner",
-                        Key = key
+                        SubType = "Set",
+                        Id = Player.Id,
+                        Rank = rank
                     })
-                end)
+                    return
+                end
+                if mode:lower() == "remove" then
+                    local Player = getPlayer(who)
+                    ROCHAT_Config.Client:Send({
+                        Type = "Rank",
+                        SubType = "Remove",
+                        Id = Player.Id,
+                        Rank = rank
+                    })
+                    return
+                end
+            end)
+
+            Chat.ChatBar.Text = ""
+        end
+    end
+    
+    Players.LocalPlayer.Chatted:Connect(function(Message)
+        Chat.ChatBar = Players.LocalPlayer.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar
+        local function runCommand(command, func)
+            if Message:match("^/" .. command) then
+                local Args = Message:split(" ")
+                table.remove(Args, 1)
+                func(unpack(Args))
             end
+        end
+        
+        runCommand("enable", function()
+            ROCHAT_Config.Enabled = true
+            Chat.ChatBar.Text = ""
+            EnterConnection:Disable()
+            customConnection = Chat.ChatBar.FocusLost:Connect(FocusLost)
         end)
+    end)
+    if ROCHAT_Config.Enabled then
+        EnterConnection:Disable()
+        customConnection = Chat.ChatBar.FocusLost:Connect(FocusLost)
     end
 end

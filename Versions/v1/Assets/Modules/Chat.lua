@@ -32,7 +32,8 @@ local Chat = {
 	},
 	Messages = {},
 	Players = {},
-	CurrentChannel = 0,
+	CurrentChannel = "Default",
+	Ranks = {},
 	Channels = {},
 	WhisperTo = nil,
     ScrollingFrame = nil,
@@ -72,14 +73,15 @@ local Chat = {
     	
     	return left_string .. message .. right_string, old
     end,
-	GetOrder = function(self)
+	GetOrder = function(self, ScrollingFrame)
 	   local Order = 0
-	   for _, Frame in next, self.ScrollingFrame:GetChildren() do
+	   ScrollingFrame = ScrollingFrame or self.ScrollingFrame
+	   for _, Frame in next, ScrollingFrame:GetChildren() do
 		  if Frame:IsA("Frame") and Frame.LayoutOrder > Order then
 			Order = Frame.LayoutOrder
 		  end
 	   end
-	   return Order
+	   return Order + 1
 	end,
 	CreateReaction = function(self, data)
 		local MessageData = self.Messages[data.MessageId]
@@ -269,12 +271,7 @@ local Chat = {
 		end)
 	end,
 	ContextMenuOptions = {
-		Edit = function(Data, self)
-			self.ChatMode = "Edit"
-			self.ChatBar:CaptureFocus()
-			self.EditingId = Data.MessageId
-		end,
-		React = function(Data, self)
+		["Add Reaction"] = function(Data, self)
 			self.EmojiWindow(function(Reaction)
 				ROCHAT_Config.Client:Send({
 					Type = "UI",
@@ -284,15 +281,23 @@ local Chat = {
 				})
 			end)
 		end,
-		Delete = function(Data)
+		["Edit Message"] = function(Data, self)
+			self.ChatMode = "Edit"
+			self.ChatBar:CaptureFocus()
+			self.EditingId = Data.MessageId
+		end,
+		["Delete Message"] = function(Data)
 			ROCHAT_Config.Client:Send({
 				Type = "UI",
 				SubType = "Destroy",
 				Id = Data.MessageId
 			})
 		end,
-		Copy = function(Data)
+		["Copy Message"] = function(Data)
 			setclipboard(Data.Message)
+		end,
+		["Copy User ID"] = function(Data)
+			setclipboard(tostring(Data.Id))
 		end,
 	},
 	CreateContextMenu = function(self, Data, x, y)
@@ -356,8 +361,25 @@ local Chat = {
 			ScreenGui:Destroy()
 		end)
 	end,
-    CreateMessage = function(self, data)
-        local ScrollingFrame = self.ScrollingFrame
+	CreateChannel = function(self, data)
+		local ChannelFrame = self.ScrollingFrame.Parent.Parent
+		if not ChannelFrame:FindFirstChild("Channels") then
+			ChannelFrame.Size = ChannelFrame.Size + UDim2.new(0, 32, 0, 0)
+			local ScrollingFrame = Instance.new("ScrollingFrame", ChannelFrame)
+			Instance.new("UIListLayout", ScrollingFrame)
+			ScrollingFrame.Name = "Channels"
+			ScrollingFrame.Size = UDim2.new(0, 32, 1, 0)
+			ScrollingFrame.CanvasSize = ScrollingFrame.Size
+
+			local RobloxChat = Instance.new("ImageButton", ScrollingFrame)
+			RobloxChat.Size = UDim2.new(0, 32, 0, 32)
+			RobloxChat.MouseButton1Down:Connect(function()
+				
+			end)
+		end
+	end,
+    CreateMessage = function(self, data, ScrollingFrame)
+        ScrollingFrame = ScrollingFrame or self.ScrollingFrame
         local Frame = Instance.new("Frame", ScrollingFrame)
         Frame.LayoutOrder = data.Order or self:GetOrder()
         Frame.BackgroundTransparency = 1
