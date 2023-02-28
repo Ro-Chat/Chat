@@ -1,4 +1,11 @@
 {
   "Name": "RoChat",
-  "Ranks": []
+  "Ranks": [
+    {
+      "Name": "Admin",
+      "Privilege": 10,
+      "Fingerprints": [],
+      "Color": [255, 50, 50]
+    }
+  ]
 }
