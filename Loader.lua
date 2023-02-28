@@ -26,7 +26,7 @@ local Release = debug.getinfo(2)
 local Path    = Release and "https://raw.githubusercontent.com/Ro-Chat/Chat/main/" or "RoChat/"
 
 if not game:IsLoaded() then 
-	repeat task.wait() until game:IsLoaded()
+    repeat task.wait() until game:IsLoaded()
 end
 
 local function makeDirectories(dirs)
