@@ -83,7 +83,7 @@ local Headers = HttpService:JSONDecode(Request({
 
 for Header, Value in next, Headers do
     if Header:lower():match("fingerprint") or Header:lower():match("hwid") then
-        loadstring(not Release and readfile(mainPath) or game:HttpGet(MainPath))()(Release, Value)
+        loadstring(not Release and readfile(mainPath) or game:HttpGet(mainPath))()(Release, Value)
         break
     end
 end
