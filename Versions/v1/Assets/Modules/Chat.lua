@@ -83,7 +83,6 @@ local Chat = {
 	   local Order = 0
 	   ScrollingFrame = ScrollingFrame or self.ScrollingFrame
 	   for _, Frame in next, ScrollingFrame:GetChildren() do
-		print(Frame:IsA("Frame") and Frame.LayoutOrder, "Order")
 		  if Frame:IsA("Frame") and Frame.LayoutOrder > Order then
 			Order = Frame.LayoutOrder
 		  end
@@ -421,16 +420,16 @@ local Chat = {
 			UICorner.CornerRadius = UDim.new(0, 16)
 
 			RobloxChat.MouseEnter:Connect(function()
-				for i = 16, 4, -1 do -- lol lazy
+				for i = 16, 8, -1 do -- lol lazy
 					UICorner.CornerRadius = UDim.new(0, i)
-					task.wait(0.05)
+					task.wait(0.02)
 				end
 			end)
 			
 			RobloxChat.MouseLeave:Connect(function()
-				for i = 4, 16 do -- lol lazy
+				for i = 8, 16 do -- lol lazy
 					UICorner.CornerRadius = UDim.new(0, i)
-					task.wait(0.05)
+					task.wait(0.02)
 				end
 			end)
 

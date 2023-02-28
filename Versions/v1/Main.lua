@@ -93,16 +93,10 @@ return function(Release, Fingerprint)
             if Data.SubType == "Edit" then
                 local MessageData = Chat:getMessage(Data.Channel, Data.Id)
 
-                print("Data")
-                table.foreach(Data, print)
-
                 MessageData.Order = MessageData.Frame.LayoutOrder
                 MessageData.Message = Data.Message
                 MessageData.MessageId = Data.Id
                 MessageData.Id = Data.From
-
-                print("MessageData")
-                table.foreach(MessageData, print)
 
                 MessageData.Frame:Destroy()
 
