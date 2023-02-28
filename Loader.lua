@@ -1,4 +1,3 @@
-
 ------------------------------------------------------------------------
 -- ooooooooo.               .oooooo.   oooo                      .    --
 -- `888   `Y88.            d8P'  `Y8b  `888                    .o8    --
@@ -28,27 +27,24 @@ local Path    = Release and "https://raw.githubusercontent.com/Ro-Chat/Chat/main
 
 -- Directory Structure
 
-function makeDirectories(dirs)
+local function makeDirectories(dirs)
     if not isfolder("RoChat") then
         makefolder("RoChat")
     end
-    for i, dir in next, dirs do
-        if isfolder("RoChat/" .. dir) then continue end
-        makefolder("RoChat/" .. dir)
+    for _, subDir in next, dirs do
+        if isfolder("RoChat/" .. subDir) then continue end
+        makefolder("RoChat/" .. subDir)
     end
 end
 
-makeDirectories({
-    "Profiles",
-    "Emojis",
-    "Versions",
-    "Embeds"
-})
+local subDirectories = Release and {"Profiles", "Emojis", "Plugins"} or {"Profiles", "Emojis", "Plugins", "Embeds", "Server", "Versions"}
 
-local ProfilePath = ("RoChat/Profiles/%s_profile.json"):format(ROCHAT_Config.Version)
-local VersionPath = ("RoChat/Versions/%s"):format(ROCHAT_Config.Version)
+makeDirectories(subDirectories)
 
-function makeTemplate(template, vars)
+local profilePath = ("RoChat/Profiles/%s_profile.json"):format(ROCHAT_Config.Version)
+local versionPath = ("RoChat/Versions/%s"):format(ROCHAT_Config.Version)
+
+local function makeTemplate(template, vars)
     for Key, Value in next, vars do
         template = template:gsub(("__%s__"):format(Key:upper()), tostring(Value))
     end
@@ -56,34 +52,29 @@ function makeTemplate(template, vars)
     return template
 end
 
-if isfile(ProfilePath) then
-    ROCHAT_Config.Profile = HttpService:JSONDecode(readfile(ProfilePath))
+if isfile(profilePath) then
+    ROCHAT_Config.Profile = HttpService:JSONDecode(readfile(profilePath))
 else
-    local ProfileTemplate = ("%s/Assets/Templates/Profile.json"):format(VersionPath)
+    local profileTemplate = ("%s/Assets/Templates/Profile.json"):format(versionPath)
     
-    if isfile(ProfileTemplate) then
-        ProfileTemplate = readfile(ProfileTemplate)
+    if isfile(profileTemplate) then
+        profileTemplate = readfile(profileTemplate)
     else
-        ProfileTemplate = game:HttpGet(("https://raw.githubusercontent.com/Ro-Chat/Chat/main/%s"):format(ProfileTemplate:sub(8, #ProfileTemplate)))
+        profileTemplate = game:HttpGet(("https://raw.githubusercontent.com/Ro-Chat/Chat/main/%s"):format(profileTemplate:sub(8, #profileTemplate)))
     end
     
-    -- print(ProfileTemplate)
-    
-    local Template = makeTemplate(ProfileTemplate, {
+    local Template = makeTemplate(profileTemplate, {
         Name = Players.LocalPlayer.DisplayName,
         Red = math.random(100, 255),
         Green = math.random(100, 255),
-        Blue = math.random(100, 255),
-        Fingerprint = Fingerprint
+        Blue = math.random(100, 255)
     })
     
-    -- print(Template)
-    
     ROCHAT_Config.Profile = HttpService:JSONDecode(Template)
-    writefile(ProfilePath, Template)
+    writefile(profilePath, Template)
 end
 
-local MainPath = Path .. "Versions/" .. ROCHAT_Config.Version .. "/Main.lua"
+local mainPath = Path .. "Versions/" .. ROCHAT_Config.Version .. "/Main.lua"
 
 local Headers = HttpService:JSONDecode(Request({
     Method = "GET",
@@ -92,9 +83,7 @@ local Headers = HttpService:JSONDecode(Request({
 
 for Header, Value in next, Headers do
     if Header:lower():match("fingerprint") or Header:lower():match("hwid") then
-        getgenv().Fingerprint = Value
+        loadstring(not Release and readfile(mainPath) or game:HttpGet(MainPath))()(Release, Value)
         break
     end
 end
-
-loadstring(not Release and readfile(MainPath) or game:HttpGet(MainPath))()(Release)
