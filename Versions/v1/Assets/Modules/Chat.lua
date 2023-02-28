@@ -1,4 +1,5 @@
 local EmojiLib = Import("Emoji")
+getgenv().Cache = Import("Cache")
 
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
@@ -30,6 +31,11 @@ local Chat = {
 			}
 		end
 	},
+	getMessage = function(self, channel, id)
+		for _, Message in next, self.Channels[channel].Messages do
+			if Message.MessageId == id or Message.Id == id then return Message end
+		end
+	end,
 	Messages = {},
 	Players = {},
 	CurrentChannel = "Default",
@@ -77,6 +83,7 @@ local Chat = {
 	   local Order = 0
 	   ScrollingFrame = ScrollingFrame or self.ScrollingFrame
 	   for _, Frame in next, ScrollingFrame:GetChildren() do
+		print(Frame:IsA("Frame") and Frame.LayoutOrder, "Order")
 		  if Frame:IsA("Frame") and Frame.LayoutOrder > Order then
 			Order = Frame.LayoutOrder
 		  end
@@ -84,7 +91,7 @@ local Chat = {
 	   return Order + 1
 	end,
 	CreateReaction = function(self, data)
-		local MessageData = self.Messages[data.MessageId]
+		local MessageData = self:getMessage(self.CurrentChannel, data.MessageId)
 		local MessageFrame = MessageData.Frame
 		local ScrollingFrame = MessageFrame:FindFirstChild("Reaction")
 
@@ -144,7 +151,8 @@ local Chat = {
 					Type = "UI",
 					SubType = "RevokeReact",
 					Reaction = data.Reaction,
-					Id = data.MessageId
+					Id = data.MessageId,
+					Channel = self.CurrentChannel
 				})
 				return
 			end
@@ -152,7 +160,8 @@ local Chat = {
 				Type = "UI",
 				SubType = "React",
 				Reaction = data.Reaction,
-				Id = data.MessageId
+				Id = data.MessageId,
+				Channel = self.CurrentChannel
 			})
 		end)
 
@@ -277,7 +286,8 @@ local Chat = {
 					Type = "UI",
 					SubType = "React",
 					Reaction = Reaction,
-					Id = Data.MessageId
+					Id = Data.MessageId,
+					Channel = self.CurrentChannel
 				})
 			end)
 		end,
@@ -286,11 +296,12 @@ local Chat = {
 			self.ChatBar:CaptureFocus()
 			self.EditingId = Data.MessageId
 		end,
-		["Delete Message"] = function(Data)
+		["Delete Message"] = function(Data, self)
 			ROCHAT_Config.Client:Send({
 				Type = "UI",
 				SubType = "Destroy",
-				Id = Data.MessageId
+				Id = Data.MessageId,
+				Channel = self.CurrentChannel
 			})
 		end,
 		["Copy Message"] = function(Data)
@@ -364,24 +375,159 @@ local Chat = {
 	CreateChannel = function(self, data)
 		local ChannelFrame = self.ScrollingFrame.Parent.Parent
 		if not ChannelFrame:FindFirstChild("Channels") then
-			ChannelFrame.Size = ChannelFrame.Size + UDim2.new(0, 32, 0, 0)
 			local ScrollingFrame = Instance.new("ScrollingFrame", ChannelFrame)
-			Instance.new("UIListLayout", ScrollingFrame)
+			local UIListLayout = Instance.new("UIListLayout", ScrollingFrame)
+
+			UIListLayout.Padding = UDim.new(0, 2)
+			UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+			
+			UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+				ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y)
+			end)
+
 			ScrollingFrame.Name = "Channels"
-			ScrollingFrame.Size = UDim2.new(0, 32, 1, 0)
+			ScrollingFrame.Position = UDim2.new(0, ChannelFrame.AbsoluteSize.X + 3, 0, 0)
+			ScrollingFrame.Size = UDim2.new(0, 32, 1, 43)
 			ScrollingFrame.CanvasSize = ScrollingFrame.Size
+			ScrollingFrame.BackgroundColor3 = ChannelFrame.BackgroundColor3
+			ScrollingFrame.BorderSizePixel = 0
+			ScrollingFrame.BackgroundTransparency = ChannelFrame.BackgroundTransparency
+
+			ChannelFrame:GetPropertyChangedSignal("BackgroundTransparency"):Connect(function()
+				ScrollingFrame.BackgroundTransparency = ChannelFrame.BackgroundTransparency
+				for _, Child in next, ScrollingFrame:GetChildren() do
+					if Child.Name == "UIListLayout" then continue end
+					task.spawn(function()
+						Child.BackgroundTransparency = ChannelFrame.BackgroundTransparency
+						if ChannelFrame.BackgroundTransparency == 1 then
+							Child.Visible = false
+						else
+							Child.Visible = true
+						end
+					end)
+				end
+			end)
+
+			local NormalChat = self.ScrollingFrame
 
 			local RobloxChat = Instance.new("ImageButton", ScrollingFrame)
+			RobloxChat.LayoutOrder = -1
+			RobloxChat.BackgroundColor3 = Color3.fromRGB(65, 65, 65)
 			RobloxChat.Size = UDim2.new(0, 32, 0, 32)
-			RobloxChat.MouseButton1Down:Connect(function()
-				
+			RobloxChat.Image = "https://www.roblox.com/asset-thumbnail/image?width=420&height=420&format=png&assetId=12627622962"
+			RobloxChat.BackgroundTransparency = 0.25
+
+			local UICorner = Instance.new("UICorner", RobloxChat)
+			UICorner.CornerRadius = UDim.new(0, 16)
+
+			RobloxChat.MouseEnter:Connect(function()
+				for i = 16, 4, -1 do -- lol lazy
+					UICorner.CornerRadius = UDim.new(0, i)
+					task.wait(0.05)
+				end
 			end)
+			
+			RobloxChat.MouseLeave:Connect(function()
+				for i = 4, 16 do -- lol lazy
+					UICorner.CornerRadius = UDim.new(0, i)
+					task.wait(0.05)
+				end
+			end)
+
+			RobloxChat.MouseButton1Down:Connect(function()
+				self.Channels[self.CurrentChannel].ScrollingFrame.Visible = false
+				for _, Child in next, self.Channels[self.CurrentChannel].ScrollingFrame:GetChildren() do
+					if Child:IsA("GuiObject") then
+						Child.Visible = false
+					end
+				end
+				self.CurrentChannel = "Default"
+				NormalChat.Visible = true
+				for _, Child in next, self.Channels[self.CurrentChannel].ScrollingFrame:GetChildren() do
+					if Child:IsA("GuiObject") then
+						Child.Visible = true
+					end
+				end
+			end)
+
+			-- return self.ScrollingFrame
 		end
+
+		local ScrollingFrame = Instance.new("ScrollingFrame", ChannelFrame)
+		local UIListLayout = Instance.new("UIListLayout", ScrollingFrame)
+
+		UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		
+		ScrollingFrame.Size = self.ScrollingFrame.Size
+		ScrollingFrame.BackgroundColor3 = self.ScrollingFrame.BackgroundColor3
+		ScrollingFrame.BackgroundTransparency = 1
+		ScrollingFrame.ScrollBarThickness = self.ScrollingFrame.ScrollBarThickness
+		ScrollingFrame.BorderSizePixel = 0
+
+		local Icon = Instance.new("ImageButton", ChannelFrame:FindFirstChild("Channels"))
+		Icon.BackgroundColor3 = Color3.fromRGB(65, 65, 65)
+		Icon.Size = UDim2.new(0, 32, 0, 32)
+		Icon.LayoutOrder = data.Id
+		if not data.Image then
+			local TextLabel = Instance.new("TextLabel", Icon)
+			TextLabel.BackgroundTransparency = 1
+			TextLabel.Size = Icon.Size
+			TextLabel.TextSize = 18
+			TextLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+			TextLabel.Text = data.Name:sub(1, 1):upper()
+		else
+			Icon.Image = Cache:GetAsset(data.Image).Asset
+		end
+		Icon.BackgroundTransparency = 0.25
+		local UICorner = Instance.new("UICorner", Icon)
+		UICorner.CornerRadius = UDim.new(0, 16)
+		
+		Icon.MouseEnter:Connect(function()
+			for i = 16, 8, -1 do -- lol lazy
+				UICorner.CornerRadius = UDim.new(0, i)
+				task.wait(0.02)
+			end
+		end)
+		
+		Icon.MouseLeave:Connect(function()
+			for i = 8, 16 do -- lol lazy
+				UICorner.CornerRadius = UDim.new(0, i)
+				task.wait(0.02)
+			end
+		end)
+
+		Icon.MouseButton1Down:Connect(function()
+			self.Channels[self.CurrentChannel].ScrollingFrame.Visible = false
+			for _, Child in next, self.Channels[self.CurrentChannel].ScrollingFrame:GetChildren() do
+				if Child:IsA("GuiObject") then
+					Child.Visible = false
+				end
+			end
+			self.CurrentChannel = data.Name
+			ScrollingFrame.Visible = true
+			for _, Child in next, self.Channels[self.CurrentChannel].ScrollingFrame:GetChildren() do
+				if Child:IsA("GuiObject") then
+					Child.Visible = true
+				end
+			end
+		end)
+		ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+
+		UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+			ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y)
+		end)
+
+		-- ChannelFrame:GetPropertyChangedSignal("BackgroundTransparency"):Connect(function()
+		-- end)
+
+		ScrollingFrame.Visible = false
+		
+		return ScrollingFrame
 	end,
     CreateMessage = function(self, data, ScrollingFrame)
         ScrollingFrame = ScrollingFrame or self.ScrollingFrame
         local Frame = Instance.new("Frame", ScrollingFrame)
-        Frame.LayoutOrder = data.Order or self:GetOrder()
+        Frame.LayoutOrder = data.Order or self:GetOrder(ScrollingFrame)
         Frame.BackgroundTransparency = 1
         Frame.Size = UDim2.new(1, 0, 0, 22)
 		Frame.InputBegan:Connect(function(input)
@@ -392,7 +538,7 @@ local Chat = {
 		end)
 
 		if data.MessageId then 
-			self.Messages[data.MessageId] = {
+			table.insert(self.Channels[self.CurrentChannel].Messages, {
 				From = data.Id,
 				Message = data.Message,
 				Id = data.MessageId,
@@ -401,7 +547,7 @@ local Chat = {
 				Color = data.Color or data.Colour,
 				Name = data.Name,
 				Reactions = {}
-			}
+			})
 		end
         
         local NameTag = Instance.new("TextButton", Frame)
@@ -558,6 +704,7 @@ local Chat = {
     			Flags.Italic = false
     		end
     	end
+		return Frame
     end
 }
 

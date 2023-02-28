@@ -1,4 +1,4 @@
-return function(Release)
+return function(Release, Fingerprint)
     local ModulePath = Release and "https://raw.githubusercontent.com/Ro-Chat/Chat/main/Versions/v1/Assets/Modules" or "RoChat/Versions/v1/Assets/Modules"
 
     getgenv().Import = function(path)
@@ -26,7 +26,8 @@ return function(Release)
     local Embed   = Import("Embed")
 
     local Client = Utility:Client({
-        Url = ROCHAT_Config.WSS
+        Url = ROCHAT_Config.WSS,
+        Fingerprint = Fingerprint
     })
 
     local function getDataFromId(Id)
@@ -46,6 +47,12 @@ return function(Release)
         return Count
     end
 
+    -- local function getMessage(channel, id)
+    --     for _, Message in next, Chat.Channels[channel].Messages do
+    --         if Message.Id == id or Message.MessageId == id then return Message end
+    --     end
+    -- end
+
     Client:OnRecieve(function(message)
         local Data = Utility:JSON(message)
         -- print(message)
@@ -57,11 +64,11 @@ return function(Release)
             --     Embed.new(Data.Value)
             -- end
             if Data.SubType == "Destroy" then
-                local MessageData = Chat.Messages[Data.Id]
+                local MessageData = Chat:getMessage(Data.Channel, Data.Id)
                 MessageData.Frame:Destroy()
             end
             if Data.SubType == "RevokeReact" then
-                local MessageData = Chat.Messages[Data.MessageId]
+                local MessageData = Chat:getMessage(Data.Channel, Data.MessageId)
                 local Reaction = MessageData.Reactions[Data.Reaction]
                 local Frame = Reaction[Data.FromId]
                 if not Frame then return end
@@ -84,15 +91,22 @@ return function(Release)
                 Chat:CreateReaction(Data)
             end
             if Data.SubType == "Edit" then
-                local MessageData = Chat.Messages[Data.Id]
+                local MessageData = Chat:getMessage(Data.Channel, Data.Id)
 
-                MessageData.Order = MessageData.Order
-                MessageData.Frame:Destroy()
+                print("Data")
+                table.foreach(Data, print)
+
+                MessageData.Order = MessageData.Frame.LayoutOrder
                 MessageData.Message = Data.Message
                 MessageData.MessageId = Data.Id
                 MessageData.Id = Data.From
 
-                Chat:CreateMessage(MessageData)
+                print("MessageData")
+                table.foreach(MessageData, print)
+
+                MessageData.Frame:Destroy()
+
+                MessageData.Frame = Chat:CreateMessage(MessageData, Chat.Channels[Data.Channel].ScrollingFrame)
             end
             if Data.SubType == "Chat" then
                 task.spawn(function()
@@ -100,7 +114,7 @@ return function(Release)
                         pcall(Callback, getDataFromId(Data.Id), Data)
                     end
                 end)
-                Chat:CreateMessage(Data)
+                Chat:CreateMessage(Data, Chat.Channels[Data.Channel].ScrollingFrame)
             end
         end
         if Data.Type == "Connection" then
@@ -108,6 +122,7 @@ return function(Release)
                 Data.Type = nil
                 Data.SubType = nil
                 table.insert(Chat.Players, Data)
+                repeat task.wait() until Chat.Channels["General"] and Chat.Channels["General"].ScrollingFrame
                 Chat:CreateMessage({
                     Name = "System",
                     Message = ("@%s connected to the server."):format(Data.Name),
@@ -116,7 +131,7 @@ return function(Release)
                         80,
                         80
                     }
-                })
+                }, Chat.Channels["General"].ScrollingFrame)
             end
             if Data.SubType == "Leave" then
                 for Idx, Player in next, Chat.Players do
@@ -129,7 +144,7 @@ return function(Release)
                                 80,
                                 80
                             }
-                        })
+                        }, Chat.Channels["General"].ScrollingFrame)
                         table.remove(Chat.Players, Idx)
                         break
                     end
@@ -148,13 +163,14 @@ return function(Release)
                     Id = -1,
                     Name = "Default",
                     Description = "This is the default chat used by roblox.",
-                    Ranks = {},
                     Messages = {},
+                    ScrollingFrame = Chat.ScrollingFrame
                     -- Icon = 
                 }
 
                 for _, Channel in next, Data.Channels do
-                    Chat:CreateChannel(Channel)
+                    if _ == "Default" then continue end
+                    Data.Channels[_].ScrollingFrame = Chat:CreateChannel(Channel)
                 end
             end
         end
@@ -205,6 +221,13 @@ return function(Release)
 
     function FocusLost(enter)
         if not enter then return end
+        if Chat.CurrentChannel == "Default" then
+            -- EnterConnection:Disable()
+            -- customConnection = Chat.ChatBar.FocusLost:Connect(FocusLost)
+            customConnection:Disconnect()
+            EnterConnection:Enable()
+            return
+        end
         local Message = Chat.ChatBar.Text
         if Message == "" then return end
         if Chat.ChatMode == "Edit" then
@@ -212,7 +235,8 @@ return function(Release)
                 Type = "UI",
                 SubType = "Edit",
                 Id = Chat.EditingId,
-                Message = Message
+                Message = Message,
+                Channel = Chat.CurrentChannel
             })
             Chat.ChatMode = "Chat"
             Chat.ChatBar.Text = ""
@@ -227,6 +251,7 @@ return function(Release)
                         Type = "UI",
                         SubType = "Chat",
                         Message = Message,
+                        Channel = Chat.CurrentChannel
                     -- Name = ROCHAT_Config.Profile.User.Name,
                     -- Color = ROCHAT_Config.Profile.User.Color
                     })
@@ -235,7 +260,7 @@ return function(Release)
                         Type = "UI",
                         SubType = "Chat",
                         To = Chat.WhisperTo,
-                        Message = Message
+                        Message = Message,
                     })
                 end
             end
@@ -297,26 +322,48 @@ return function(Release)
             Chat.ChatBar.Text = ""
         end
     end
-    
-    Players.LocalPlayer.Chatted:Connect(function(Message)
-        Chat.ChatBar = Players.LocalPlayer.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar
-        local function runCommand(command, func)
-            if Message:match("^/" .. command) then
-                local Args = Message:split(" ")
-                table.remove(Args, 1)
-                func(unpack(Args))
+
+    local ChannelCheck = coroutine.create(function()
+        local Check = true
+
+        while true do task.wait()
+            Chat.ChatBar = Players.LocalPlayer.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar
+            if Chat.CurrentChannel ~= "Default" and Check then
+                EnterConnection:Disable()
+                customConnection = Chat.ChatBar.FocusLost:Connect(FocusLost)
+                Check = false
+            elseif not Check and Chat.CurrentChannel == "Default" then
+                if customConnection and customConnection.Connected then
+                    customConnection:Disconnect()
+                end
+                EnterConnection:Enable()
+                Check = true
             end
         end
-        
-        runCommand("enable", function()
-            ROCHAT_Config.Enabled = true
-            Chat.ChatBar.Text = ""
-            EnterConnection:Disable()
-            customConnection = Chat.ChatBar.FocusLost:Connect(FocusLost)
-        end)
     end)
-    if ROCHAT_Config.Enabled then
-        EnterConnection:Disable()
-        customConnection = Chat.ChatBar.FocusLost:Connect(FocusLost)
-    end
+
+    coroutine.resume(ChannelCheck)
+
+    -- Players.LocalPlayer.Chatted:Connect(function(Message)
+    --     local function runCommand(command, func)
+    --         if Message:match("^/" .. command) then
+    --             local Args = Message:split(" ")
+    --             table.remove(Args, 1)
+    --             func(unpack(Args))
+    --         end
+    --     end
+
+    --     -- print(Chat.CurrentChannel)
+        
+    --     -- runCommand("enable", function()
+    --     --     ROCHAT_Config.Enabled = true
+    --     --     Chat.ChatBar.Text = ""
+    --     --     EnterConnection:Disable()
+    --     --     customConnection = Chat.ChatBar.FocusLost:Connect(FocusLost)
+    --     -- end)
+    -- end)
+    -- if ROCHAT_Config.Enabled then
+    --     EnterConnection:Disable()
+    --     customConnection = Chat.ChatBar.FocusLost:Connect(FocusLost)
+    -- end
 end

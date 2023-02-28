@@ -70,7 +70,7 @@ function Utility:Client(data)
   Client:Send({
     Type = "Connection",
     SubType = "Join",
-    Fingerprint = Fingerprint,
+    Fingerprint = data.Fingerprint,
     Name = ROCHAT_Config.Profile.User.Name,
     Color = ROCHAT_Config.Profile.User.Color or ROCHAT_Config.Profile.User.Colour,
   })
