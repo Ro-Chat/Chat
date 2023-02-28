@@ -25,7 +25,9 @@ local Request = syn.request or http and request
 local Release = debug.getinfo(2)
 local Path    = Release and "https://raw.githubusercontent.com/Ro-Chat/Chat/main/" or "RoChat/"
 
--- Directory Structure
+if not game:IsLoaded() then 
+	repeat task.wait() until game:IsLoaded()
+end
 
 local function makeDirectories(dirs)
     if not isfolder("RoChat") then
