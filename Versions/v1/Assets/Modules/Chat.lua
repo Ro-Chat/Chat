@@ -1,5 +1,5 @@
-local EmojiLib = Import("Emoji")
 getgenv().Cache = Import("Cache")
+local EmojiLib = Import("Emoji")
 
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
@@ -15,6 +15,33 @@ local function countDict(dict)
 
 	return Count
 end
+
+local Env = getsenv(game.Players.LocalPlayer.PlayerScripts.ChatScript.ChatMain)
+
+local UpdateFadingForMouseState
+
+table.foreach(Env, function(Function, func)
+    if Function == "UpdateFadingForMouseState" then
+        UpdateFadingForMouseState = func
+        -- ChatTable1, ChatTable2 = debug.getupvalue(func, 1), debug.getupvalue(func, 2) 
+        return
+    end
+end)
+
+function CheckIfPointIsInSquare(p6, p7, p8)
+	-- totally not ripped from syn decompiler :troll:
+	local v43 = false;
+	if p7.X <= p6.X then
+		v43 = false;
+		if p6.X <= p8.X then
+			v43 = false;
+			if p7.Y <= p6.Y then
+				v43 = p6.Y <= p8.Y;
+			end;
+		end;
+	end;
+	return v43;
+end;
 
 local Chat = {
 	OnChat = {
@@ -375,6 +402,15 @@ local Chat = {
 		local ChannelFrame = self.ScrollingFrame.Parent.Parent
 		if not ChannelFrame:FindFirstChild("Channels") then
 			local ScrollingFrame = Instance.new("ScrollingFrame", ChannelFrame)
+			UserInputService.InputChanged:connect(function(Input)
+				if Input.UserInputType == Enum.UserInputType.MouseMovement then
+					local MousePosition = Vector2.new(Input.Position.X, Input.Position.Y)
+
+					if CheckIfPointIsInSquare(MousePosition, ScrollingFrame.AbsolutePosition, ScrollingFrame.AbsolutePosition + ScrollingFrame.AbsoluteSize) then
+						UpdateFadingForMouseState(true)
+					end
+				end;
+			end)
 			local UIListLayout = Instance.new("UIListLayout", ScrollingFrame)
 
 			UIListLayout.Padding = UDim.new(0, 2)
@@ -455,6 +491,23 @@ local Chat = {
 		local ScrollingFrame = Instance.new("ScrollingFrame", ChannelFrame)
 		local UIListLayout = Instance.new("UIListLayout", ScrollingFrame)
 
+		local Frame = Instance.new("Frame", ScrollingFrame)
+		Frame.Size = UDim2.new(1, 0, 0, 32)
+		Frame.BackgroundTransparency = 1
+
+		local TextLabel = Instance.new("TextLabel", Frame)
+		-- TextLabel.RichText = true
+		TextLabel.TextTruncate = Enum.TextTruncate.AtEnd
+		TextLabel.Position = UDim2.new(0, 8, 0, 0)
+		TextLabel.Size = UDim2.new(1, 0, 0, 32)
+		-- TextLabel.TextSize = 32
+		TextLabel.Text = ("Welcome to #%s!"):format(data.Name)
+		TextLabel.Font = Enum.Font.Ubuntu
+		TextLabel.TextSize = 20
+		TextLabel.BackgroundTransparency = 1
+		TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+		TextLabel.TextColor3 = Color3.fromRGB(251, 255, 251)
+
 		UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 		
 		ScrollingFrame.Size = self.ScrollingFrame.Size
@@ -467,6 +520,7 @@ local Chat = {
 		Icon.BackgroundColor3 = Color3.fromRGB(65, 65, 65)
 		Icon.Size = UDim2.new(0, 32, 0, 32)
 		Icon.LayoutOrder = data.Id
+
 		if not data.Image then
 			local TextLabel = Instance.new("TextLabel", Icon)
 			TextLabel.BackgroundTransparency = 1
@@ -477,6 +531,7 @@ local Chat = {
 		else
 			Icon.Image = Cache:GetAsset(data.Image).Asset
 		end
+
 		Icon.BackgroundTransparency = 0.25
 		local UICorner = Instance.new("UICorner", Icon)
 		UICorner.CornerRadius = UDim.new(0, 16)
