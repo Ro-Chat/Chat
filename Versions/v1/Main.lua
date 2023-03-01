@@ -197,7 +197,7 @@ return function(Release, Fingerprint)
     -- task.wait(0.2)
     -- Chat.ChatBar.TextBounds.TextScaled = true
 
-    Embed.ScrollingFrame = Chat.ScrollingFrame
+    -- Embed.ScrollingFrame = Chat.ScrollingFrame
 
     local EnterConnection = getconnections(Chat.ChatBar.FocusLost)[1]
     local customConnection
