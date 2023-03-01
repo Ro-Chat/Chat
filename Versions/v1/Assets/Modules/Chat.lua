@@ -563,12 +563,16 @@ local Chat = {
 			end
 			self.CurrentChannel = data.Name
 			ScrollingFrame.Visible = true
+			local Y = 0
 			for _, Child in next, self.Channels[self.CurrentChannel].ScrollingFrame:GetChildren() do
 				if Child:IsA("GuiObject") then
 					Child.Visible = true
+					Y = Y + Child.AbsoluteSize.Y
 				end
 			end
+			ScrollingFrame.CanvasPosition = Vector2.new(0, Y)
 		end)
+
 		ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 
 		UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
@@ -707,7 +711,6 @@ local Chat = {
     		end
 
     		WordLabel.Text = RichWord
-
 			WordLabel.TextSize = 18
     		WordLabel.Size = UDim2.new(0, WordLabel.TextBounds.X, 0, WordLabel.TextBounds.Y)
 
@@ -751,6 +754,8 @@ local Chat = {
 								Child.Visible = true
 							end
 						end
+
+						ScrollingFrame.CanvasPosition = ScrollingFrame.CanvasPosition + Vector2.new(0, ScrollingFrame.CanvasSize.Height)
 					end)
 				end
 			end
@@ -789,7 +794,14 @@ local Chat = {
     				-- WordLabel.TextTruncate = Enum.TextTruncate.AtEnd
     			end
     		end
-    		
+
+			local CSrollingFrame = self.Channels[self.CurrentChannel].ScrollingFrame
+			local Pos = math.floor(CSrollingFrame.CanvasSize.Height.Offset - CSrollingFrame.CanvasPosition.Y - WordLabel.AbsoluteSize.Y) - math.floor(CSrollingFrame.AbsoluteWindowSize.Y)
+			
+			if Pos >= 0 and Pos <= 24 then
+				CSrollingFrame.CanvasPosition = CSrollingFrame.CanvasPosition + Vector2.new(0, ScrollingFrame.AbsoluteSize.Y)
+			end
+
     		if Word:match("__$") then
     			Flags.Underline = false
     		end
