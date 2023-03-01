@@ -76,7 +76,8 @@ return function(Release, Fingerprint)
                 if ReactionCount == 1 then
                     MessageData.Reactions[Data.Reaction] = nil
                     local ReactionFrame = Frame.Parent
-                    if countDict(MessageData.Reactions) == 0 then
+                    local Counter = countDict(MessageData.Reactions)
+                    if Counter == 0 then
                         ReactionFrame.Parent.Size = ReactionFrame.Parent.Size - UDim2.new(0, 0, 0, 28)
                         ReactionFrame:Destroy()
                         return
@@ -85,7 +86,7 @@ return function(Release, Fingerprint)
                     return
                 end
                 Reaction[Data.FromId] = nil
-                Frame.TextLabel.Text = ReactionCount
+                Frame.TextLabel.Text = tostring(ReactionCount - 1)
             end
             if Data.SubType == "React" then
                 Chat:CreateReaction(Data)
