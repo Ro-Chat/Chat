@@ -450,7 +450,10 @@ local Chat = {
 			RobloxChat.BackgroundColor3 = Color3.fromRGB(65, 65, 65)
 			RobloxChat.Size = UDim2.new(0, 32, 0, 32)
 			RobloxChat.Image = "https://www.roblox.com/asset-thumbnail/image?width=420&height=420&format=png&assetId=12627622962"
-			RobloxChat.BackgroundTransparency = 0.25
+			RobloxChat.BackgroundTransparency = ScrollingFrame.BackgroundTransparency
+			if ScrollingFrame.BackgroundTransparency == 1 then
+				RobloxChat.Visible = false
+			end
 
 			local UICorner = Instance.new("UICorner", RobloxChat)
 			UICorner.CornerRadius = UDim.new(0, 16)
@@ -532,7 +535,8 @@ local Chat = {
 			Icon.Image = Cache:GetAsset(data.Image).Asset
 		end
 
-		Icon.BackgroundTransparency = 0.25
+		Icon.BackgroundTransparency = 0.5
+
 		local UICorner = Instance.new("UICorner", Icon)
 		UICorner.CornerRadius = UDim.new(0, 16)
 		
@@ -706,6 +710,50 @@ local Chat = {
 
 			WordLabel.TextSize = 18
     		WordLabel.Size = UDim2.new(0, WordLabel.TextBounds.X, 0, WordLabel.TextBounds.Y)
+
+			if RichWord:match("^#") then
+				local Channel = RichWord:match("^#([%w%p]+)")
+				local Data
+
+				for ChannelName, ChannelData in next, self.Channels do
+					if ChannelName == Channel then
+						Data = ChannelData
+						break
+					end
+				end
+				
+				if Data then
+
+					Instance.new("UICorner", WordLabel).CornerRadius = UDim.new(0, 3)
+					WordLabel.BackgroundTransparency = 0.75
+					WordLabel.TextColor3 = Color3.fromRGB(231, 235, 231)
+					WordLabel.BackgroundColor3 = Color3.fromRGB(25,140,255)
+
+					
+					local Button = Instance.new("TextButton",  WordLabel)
+					Button.Text = ""
+					Button.BackgroundTransparency = 1
+					Button.Size = WordLabel.Size
+					Button.MouseButton1Down:Connect(function()
+						local ScrollingFrame = self.Channels[self.CurrentChannel].ScrollingFrame
+
+						ScrollingFrame.Visible = false
+						for _, Child in next, ScrollingFrame:GetChildren() do
+							if Child:IsA("GuiObject") then
+								Child.Visible = false
+							end
+						end
+						self.CurrentChannel = Channel
+
+						Data.ScrollingFrame.Visible = true
+						for _, Child in next, Data.ScrollingFrame:GetChildren() do
+							if Child:IsA("GuiObject") then
+								Child.Visible = true
+							end
+						end
+					end)
+				end
+			end
 
 			if Emoji and ROCHAT_Config.Profile.Emojis[Emoji] then
     		    WordLabel:Destroy()
