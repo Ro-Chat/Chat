@@ -23,7 +23,6 @@ return function(Release, Fingerprint)
 
     local Chat    = Import("Chat")
     local Utility = Import("Utility")
-    local Embed   = Import("Embed")
 
     local Client = Utility:Client({
         Url = ROCHAT_Config.WSS,
