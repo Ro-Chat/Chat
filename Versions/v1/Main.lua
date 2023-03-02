@@ -12,7 +12,7 @@ return function(Release, Fingerprint)
             return loadstring(readfile(path))()
         end)
 
-        print(os.clock() - start)
+        print(path, os.clock() - start)
 
         if not status then
             warn(path, "caused an error.")
