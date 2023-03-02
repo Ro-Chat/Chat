@@ -30,9 +30,7 @@ if not game:IsLoaded() then
 end
 
 local function makeDirectories(dirs)
-    if not isfolder("RoChat") then
-        makefolder("RoChat")
-    end
+    makefolder("RoChat")
     for _, subDir in next, dirs do
         if isfolder("RoChat/" .. subDir) then continue end
         makefolder("RoChat/" .. subDir)
@@ -41,22 +39,24 @@ end
 
 local subDirectories = Release and {"Profiles", "Emojis", "Plugins"} or {"Profiles", "Emojis", "Plugins", "Embeds", "Server", "Versions"}
 
-makeDirectories(subDirectories)
+if not isfolder("RoChat") then
+    makeDirectories(subDirectories)
+end
 
 local profilePath = ("RoChat/Profiles/%s_profile.json"):format(ROCHAT_Config.Version)
 local versionPath = ("RoChat/Versions/%s"):format(ROCHAT_Config.Version)
 
-local function makeTemplate(template, vars)
-    for Key, Value in next, vars do
-        template = template:gsub(("__%s__"):format(Key:upper()), tostring(Value))
-    end
-    
-    return template
-end
-
 if isfile(profilePath) then
     ROCHAT_Config.Profile = HttpService:JSONDecode(readfile(profilePath))
 else
+    local function makeTemplate(template, vars)
+        for Key, Value in next, vars do
+            template = template:gsub(("__%s__"):format(Key:upper()), tostring(Value))
+        end
+
+        return template
+    end
+    
     local profileTemplate = ("%s/Assets/Templates/Profile.json"):format(versionPath)
     
     if isfile(profileTemplate) then
