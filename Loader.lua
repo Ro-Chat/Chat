@@ -29,17 +29,17 @@ if not game:IsLoaded() then
     repeat task.wait() until game:IsLoaded()
 end
 
-local function makeDirectories(dirs)
-    makefolder("RoChat")
-    for _, subDir in next, dirs do
-        if isfolder("RoChat/" .. subDir) then continue end
-        makefolder("RoChat/" .. subDir)
-    end
-end
-
-local subDirectories = Release and {"Profiles", "Emojis", "Plugins"} or {"Profiles", "Emojis", "Plugins", "Embeds", "Server", "Versions"}
-
 if not isfolder("RoChat") then
+    local function makeDirectories(dirs)
+        makefolder("RoChat")
+        for _, subDir in next, dirs do
+            if isfolder("RoChat/" .. subDir) then continue end
+            makefolder("RoChat/" .. subDir)
+        end
+    end
+
+    local subDirectories = Release and {"Profiles", "Emojis", "Plugins"} or {"Profiles", "Emojis", "Plugins", "Embeds", "Server", "Versions"}
+
     makeDirectories(subDirectories)
 end
 
