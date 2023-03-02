@@ -3,6 +3,7 @@ return function(Release, Fingerprint)
 
     getgenv().Import = function(path)
         local path = ("%s/%s.lua"):format(ModulePath, path)
+        local start = os.clock()
 
         local status, result = pcall(function()
             if Release then
@@ -10,6 +11,8 @@ return function(Release, Fingerprint)
             end
             return loadstring(readfile(path))()
         end)
+
+        print(os.clock() - start)
 
         if not status then
             warn(path, "caused an error.")
@@ -21,8 +24,9 @@ return function(Release, Fingerprint)
 
     local Players = game:GetService("Players")
 
-    local Chat    = Import("Chat")
-    local Utility = Import("Utility")
+    getgenv().Chat    = Import("Chat")
+    getgenv().Utility = Import("Utility")
+    getgenv().Plugin  = Import("Plugin")
     -- local Embed   = Import("Embed")
 
     local Client = Utility:Client({
@@ -166,6 +170,9 @@ return function(Release, Fingerprint)
                 for _, Channel in next, Data.Channels do
                     if _ == "Default" then continue end
                     Data.Channels[_].ScrollingFrame = Chat:CreateChannel(Channel)
+                    for _, Message in next, Channel.Messages do
+
+                    end
                 end
             end
         end
@@ -187,7 +194,7 @@ return function(Release, Fingerprint)
         end
     end)
 
-    ROCHAT_Config.Client = Client
+    ROCHAT_Config.Client  = Client
     ROCHAT_Config.Enabled = ROCHAT_Config.Enabled or true
 
     -- Change this for custom chats
@@ -216,6 +223,7 @@ return function(Release, Fingerprint)
 
     function FocusLost(enter)
         if not enter then return end
+
         if Chat.CurrentChannel == "Default" then
             -- EnterConnection:Disable()
             -- customConnection = Chat.ChatBar.FocusLost:Connect(FocusLost)
@@ -223,8 +231,11 @@ return function(Release, Fingerprint)
             EnterConnection:Enable()
             return
         end
+
         local Message = Chat.ChatBar.Text
+
         if Message == "" then return end
+
         if Chat.ChatMode == "Edit" then
             ROCHAT_Config.Client:Send({
                 Type = "UI",
@@ -240,24 +251,12 @@ return function(Release, Fingerprint)
 
         if Chat.ChatMode == "Chat" then
             if Message:sub(1, 1) ~= "/" then
-                -- print(ROCHAT_Config.Profile.User.Name)
-                if not Chat.WhisperTo then
-                    Client:Send({
-                        Type = "UI",
-                        SubType = "Chat",
-                        Message = Message,
-                        Channel = Chat.CurrentChannel
-                    -- Name = ROCHAT_Config.Profile.User.Name,
-                    -- Color = ROCHAT_Config.Profile.User.Color
-                    })
-                else
-                    Client:Send({
-                        Type = "UI",
-                        SubType = "Chat",
-                        To = Chat.WhisperTo,
-                        Message = Message,
-                    })
-                end
+                Client:Send({
+                    Type = "UI",
+                    SubType = "Chat",
+                    Message = Message,
+                    Channel = Chat.CurrentChannel
+                })
             end
 
             local function runCommand(command, func)
@@ -267,13 +266,6 @@ return function(Release, Fingerprint)
                     func(unpack(Args))
                 end
             end
-            
-            runCommand("disable", function()
-                ROCHAT_Config.Enabled = false
-                customConnection:Disconnect()
-                Chat.ChatBar.Text = ""
-                EnterConnection:Enable()
-            end)
 
             runCommand("redeem", function(key)
                 ROCHAT_Config.Client:Send({
