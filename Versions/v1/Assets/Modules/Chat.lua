@@ -1,5 +1,5 @@
 getgenv().Cache = Import("Cache")
-local EmojiLib = Import("Emoji")
+getgenv().EmojiLib = Import("Emoji")
 
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
@@ -68,7 +68,6 @@ local Chat = {
 	CurrentChannel = "Default",
 	Ranks = {},
 	Channels = {},
-	WhisperTo = nil,
     ScrollingFrame = nil,
 	ChatBar = nil,
     Markdown = function(message, flags)
@@ -233,6 +232,9 @@ local Chat = {
 		local ScrollingFrame = Instance.new("ScrollingFrame")
 		local UIGridLayout = Instance.new("UIGridLayout")
 
+		if syn then
+			syn.protect_gui(ScreenGui)
+		end
 		ScreenGui.Parent = CoreGui
 		
 		local Position = UserInputService:GetMouseLocation()
@@ -320,6 +322,7 @@ local Chat = {
 		["Edit Message"] = function(Data, self)
 			self.ChatMode = "Edit"
 			self.ChatBar:CaptureFocus()
+			self.ChatBar.Text = Data.Message
 			self.EditingId = Data.MessageId
 		end,
 		["Delete Message"] = function(Data, self)
@@ -398,10 +401,19 @@ local Chat = {
 			ScreenGui:Destroy()
 		end)
 	end,
+	ChannelFrame = nil,
 	CreateChannel = function(self, data)
 		local ChannelFrame = self.ScrollingFrame.Parent.Parent
 		if not ChannelFrame:FindFirstChild("Channels") then
 			local ScrollingFrame = Instance.new("ScrollingFrame", ChannelFrame)
+			self.ChannelFrame = ScrollingFrame
+			self.ScrollingFrame:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+				ScrollingFrame.Position = UDim2.new(0, self.ScrollingFrame.AbsoluteSize.X + 8, 0, 0)
+				for Channel, Data in next, self.Channels do
+					Data.ScrollingFrame.Size = self.ScrollingFrame.Size
+				end
+			end)
+
 			UserInputService.InputChanged:connect(function(Input)
 				if Input.UserInputType == Enum.UserInputType.MouseMovement then
 					local MousePosition = Vector2.new(Input.Position.X, Input.Position.Y)
@@ -409,8 +421,9 @@ local Chat = {
 					if CheckIfPointIsInSquare(MousePosition, ScrollingFrame.AbsolutePosition, ScrollingFrame.AbsolutePosition + ScrollingFrame.AbsoluteSize) then
 						UpdateFadingForMouseState(true)
 					end
-				end;
+				end
 			end)
+
 			local UIListLayout = Instance.new("UIListLayout", ScrollingFrame)
 
 			UIListLayout.Padding = UDim.new(0, 2)
@@ -613,11 +626,7 @@ local Chat = {
 		end
         
         local NameTag = Instance.new("TextButton", Frame)
-		if data.To then
-	        NameTag.Text = ("[Whisper from %s]:"):format(data.Name)
-		else
-			NameTag.Text = ("[%s]:"):format(data.Name)
-		end
+		NameTag.Text = ("[%s]:"):format(data.Name)
         NameTag.Position = UDim2.new(0, 8, 0, 0)
         NameTag.FontFace = Font.fromEnum(Enum.Font.SourceSansBold)
         NameTag.TextSize = 18
@@ -625,23 +634,7 @@ local Chat = {
         NameTag.TextColor3 = Color3.fromRGB(unpack(data.Color or data.Colour))
 		NameTag.MouseButton1Down:Connect(function()
 			self.ChatBar = Players.LocalPlayer.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar
-			local PlaceholderText = self.ChatBar.Parent.TextLabel
-			PlaceholderText.Text = ""
-
-			local MessageMode = self.ChatBar.Parent.MessageMode
-			MessageMode.Size = UDim2.new(1, 0, 1, 0)
-			MessageMode.TextColor3 = Color3.fromRGB(unpack(data.Color or data.Colour))
-			MessageMode.Text = ("[To %s]"):format(data.Name)
-
-			local TextBounds = MessageMode.TextBounds
-			MessageMode.Size = UDim2.new(0, math.ceil(TextBounds.X), 1, 0)
-
-			self.ChatBar.Position = UDim2.new(0, math.ceil(TextBounds.X) + 4, 0, 0)
-			self.WhisperTo = data.Id
-
-			MessageMode:GetPropertyChangedSignal("Text"):Once(function()
-				self.WhisperTo = nil
-			end)
+			
 		end)
 
         local TextSize = NameTag.TextBounds
@@ -738,24 +731,22 @@ local Chat = {
 					Button.BackgroundTransparency = 1
 					Button.Size = WordLabel.Size
 					Button.MouseButton1Down:Connect(function()
-						local ScrollingFrame = self.Channels[self.CurrentChannel].ScrollingFrame
-
-						ScrollingFrame.Visible = false
-						for _, Child in next, ScrollingFrame:GetChildren() do
+						self.Channels[self.CurrentChannel].ScrollingFrame.Visible = false
+						for _, Child in next, self.Channels[self.CurrentChannel].ScrollingFrame:GetChildren() do
 							if Child:IsA("GuiObject") then
 								Child.Visible = false
 							end
 						end
 						self.CurrentChannel = Channel
-
-						Data.ScrollingFrame.Visible = true
-						for _, Child in next, Data.ScrollingFrame:GetChildren() do
+						self.Channels[self.CurrentChannel].ScrollingFrame.Visible = true
+						local Y = 0
+						for _, Child in next, self.Channels[self.CurrentChannel].ScrollingFrame:GetChildren() do
 							if Child:IsA("GuiObject") then
 								Child.Visible = true
+								Y = Y + Child.AbsoluteSize.Y
 							end
 						end
-
-						ScrollingFrame.CanvasPosition = ScrollingFrame.CanvasPosition + Vector2.new(0, ScrollingFrame.CanvasSize.Height)
+						self.Channels[self.CurrentChannel].ScrollingFrame.CanvasPosition = Vector2.new(0, Y)
 					end)
 				end
 			end

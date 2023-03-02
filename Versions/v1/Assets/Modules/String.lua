@@ -1,5 +1,5 @@
-local Int = Import("Int")
-local Binary = Import("Binary")
+getgenv().Int = Import("Int")
+getgenv().Binary = Import("Binary")
 
 local String = {}
 

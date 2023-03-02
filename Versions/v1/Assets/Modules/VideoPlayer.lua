@@ -1,5 +1,3 @@
-local ImageLib = Import("Image")
-
 getgenv().VideoPlayer = VideoPlayer or {
   Videos = {},
   Frames = {},

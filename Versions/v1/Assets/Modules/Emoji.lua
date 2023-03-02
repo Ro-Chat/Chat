@@ -1,4 +1,4 @@
-local ImageLib = Import("Image")
+getgenv().ImageLib = Import("Image")
 Import("VideoPlayer")
 
 local Emoji = {
