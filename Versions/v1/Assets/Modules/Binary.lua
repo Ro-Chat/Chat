@@ -29,7 +29,7 @@ local byteMT = {__mode = "k",__type = "byte",__index = Bytes}
 local Bytes = setmetatable(Bytes,byteMT)
 
 function B2D(binary)
-    ret = 0
+    local ret = 0
     binary = binary:reverse()
     for i=0, #binary - 1 do
         ret = ret + ( 2 ^ i ) * tonumber(binary:sub(i + 1, i + 1) )
@@ -38,9 +38,9 @@ function B2D(binary)
 end
 
 Bytes.new = function(Binary)
-    bytes = {}
+    local bytes = {}
     for i=1,#Binary/8 do
-      byte = Binary:sub(i*8-8+1%i,i*8)
+      local byte = Binary:sub(i*8-8+1%i,i*8)
       table.insert(bytes,{
           byte = byte,
           nibbles = Nibble.new(byte),
