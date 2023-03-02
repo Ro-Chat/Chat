@@ -1,5 +1,5 @@
 getgenv().Int = Import("Int")
-getgenv().Binary = Import("Binary")
+-- getgenv().Binary = Import("Binary")
 
 local String = {}
 
@@ -25,7 +25,7 @@ String.new = function(str)
     end
     
     function string:bsub(sbegin, send, endianness)
-       return Binary(Int.from_bytes(string.string:sub(utf8.offset(string.string, sbegin), utf8.offset(string.string, send)), endianness)).binary
+    --    return Binary(Int.from_bytes(string.string:sub(utf8.offset(string.string, sbegin), utf8.offset(string.string, send)), endianness)).binary
     end
     
     function string:sub(sbegin, send)
