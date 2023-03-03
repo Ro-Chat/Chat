@@ -22,8 +22,10 @@ local HttpService = game:GetService("HttpService")
 local Players     = game:GetService("Players")
 
 local Request = syn.request or http and request
-local Release = debug.getinfo(2)
+local Status, Release = pcall(function() return debug.getinfo(3) end)
 local Path    = Release and "https://raw.githubusercontent.com/Ro-Chat/Chat/main/" or "RoChat/"
+
+Release = Status and Release
 
 if not game:IsLoaded() then 
     repeat task.wait() until game:IsLoaded()
