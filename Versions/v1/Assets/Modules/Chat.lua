@@ -16,16 +16,18 @@ local function countDict(dict)
 	return Count
 end
 
-local Env = getsenv(game.Players.LocalPlayer.PlayerScripts.ChatScript.ChatMain)
+local Env = getsenv(Players.LocalPlayer.PlayerScripts.ChatScript.ChatMain)
 
 local UpdateFadingForMouseState
 
-table.foreach(Env, function(Function, func)
-    if Function == "UpdateFadingForMouseState" then
-        UpdateFadingForMouseState = func
-        -- ChatTable1, ChatTable2 = debug.getupvalue(func, 1), debug.getupvalue(func, 2) 
-        return
-    end
+task.spawn(function()
+	table.foreach(Env, function(Function, func)
+		if Function == "UpdateFadingForMouseState" then
+			UpdateFadingForMouseState = func
+			-- ChatTable1, ChatTable2 = debug.getupvalue(func, 1), debug.getupvalue(func, 2) 
+			return
+		end
+	end)
 end)
 
 function CheckIfPointIsInSquare(p6, p7, p8)
@@ -464,9 +466,6 @@ local Chat = {
 			RobloxChat.Size = UDim2.new(0, 32, 0, 32)
 			RobloxChat.Image = "https://www.roblox.com/asset-thumbnail/image?width=420&height=420&format=png&assetId=12627622962"
 			RobloxChat.BackgroundTransparency = ScrollingFrame.BackgroundTransparency
-			if ScrollingFrame.BackgroundTransparency == 1 then
-				RobloxChat.Visible = false
-			end
 
 			local UICorner = Instance.new("UICorner", RobloxChat)
 			UICorner.CornerRadius = UDim.new(0, 16)

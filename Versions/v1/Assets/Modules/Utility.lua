@@ -28,6 +28,11 @@ function Utility:Client(data)
   --[[
      Creates a websocket client
   ]]
+
+  if ROCHAT_Config.Client then 
+    ROCHAT_Config.Client:Close()
+  end
+
   local Client = {
       WSS               = data.Url,
       Key               = data.Key,
@@ -66,7 +71,7 @@ function Utility:Client(data)
       CloseConnection   = nil,
       RecieveConnection = nil,
   }
-
+  
   Client:Send({
     Type = "Connection",
     SubType = "Join",

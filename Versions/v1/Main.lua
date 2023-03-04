@@ -3,7 +3,7 @@ return function(Release, Fingerprint)
 
     getgenv().Import = function(path)
         local path = ("%s/%s.lua"):format(ModulePath, path)
-        local start = os.clock()
+        -- local start = os.clock()
 
         local status, result = pcall(function()
             if Release then
@@ -12,7 +12,7 @@ return function(Release, Fingerprint)
             return loadstring(readfile(path))()
         end)
 
-        print(path, os.clock() - start)
+        -- print(path, os.clock() - start)
 
         if not status then
             warn(path, "caused an error.")
@@ -24,9 +24,9 @@ return function(Release, Fingerprint)
 
     local Players = game:GetService("Players")
 
-    getgenv().Chat    = Import("Chat")
-    getgenv().Utility = Import("Utility")
-    getgenv().Plugin  = Import("Plugin")
+    getgenv().Chat    = Chat or Import("Chat")
+    getgenv().Utility = Utility or Import("Utility")
+    getgenv().Plugin  = Plugin or Import("Plugin")
     -- local Embed   = Import("Embed")
 
     local Client = Utility:Client({
@@ -57,143 +57,6 @@ return function(Release, Fingerprint)
     --     end
     -- end
 
-    Client:OnRecieve(function(message)
-        local Data = Utility:JSON(message)
-        -- print(message)
-        if Data.Type == "UI" then
-            -- if Data.SubType == "Interact" then
-            --     Interact.Callbacks[Data.Id](Data.Value)
-            -- end
-            -- if Data.SubType == "Create" then
-            --     Embed.new(Data.Value)
-            -- end
-            if Data.SubType == "Destroy" then
-                local MessageData = Chat:getMessage(Data.Channel, Data.Id)
-                MessageData.Frame:Destroy()
-            end
-            if Data.SubType == "RevokeReact" then
-                local MessageData = Chat:getMessage(Data.Channel, Data.MessageId)
-                local Reaction = MessageData.Reactions[Data.Reaction]
-                local Frame = Reaction[Data.FromId]
-                if not Frame then return end
-                local ReactionCount = countDict(Reaction)
-                if ReactionCount == 1 then
-                    MessageData.Reactions[Data.Reaction] = nil
-                    local ReactionFrame = Frame.Parent
-                    local Counter = countDict(MessageData.Reactions)
-                    if Counter == 0 then
-                        ReactionFrame.Parent.Size = ReactionFrame.Parent.Size - UDim2.new(0, 0, 0, 28)
-                        ReactionFrame:Destroy()
-                        return
-                    end
-                    Frame:Destroy()
-                    return
-                end
-                Reaction[Data.FromId] = nil
-                Frame.TextLabel.Text = tostring(ReactionCount - 1)
-            end
-            if Data.SubType == "React" then
-                Chat:CreateReaction(Data)
-            end
-            if Data.SubType == "Edit" then
-                local MessageData = Chat:getMessage(Data.Channel, Data.Id)
-
-                MessageData.Order = MessageData.Frame.LayoutOrder
-                MessageData.Message = Data.Message
-                MessageData.MessageId = Data.Id
-                MessageData.Id = Data.From
-
-                MessageData.Frame:Destroy()
-
-                MessageData.Frame = Chat:CreateMessage(MessageData, Chat.Channels[Data.Channel].ScrollingFrame)
-            end
-            if Data.SubType == "Chat" then
-                task.spawn(function()
-                    for _, Callback in next, Chat.OnChat.Callbacks do
-                        pcall(Callback, getDataFromId(Data.Id), Data)
-                    end
-                end)
-                Chat:CreateMessage(Data, Chat.Channels[Data.Channel].ScrollingFrame)
-            end
-        end
-        if Data.Type == "Connection" then
-            if Data.SubType == "Join" then
-                Data.Type = nil
-                Data.SubType = nil
-                table.insert(Chat.Players, Data)
-                repeat task.wait() until Chat.Channels["General"] and Chat.Channels["General"].ScrollingFrame
-                Chat:CreateMessage({
-                    Name = "System",
-                    Message = ("@%s connected to the server."):format(Data.Name),
-                    Color = {
-                        80,
-                        80,
-                        80
-                    }
-                }, Chat.Channels["General"].ScrollingFrame)
-            end
-            if Data.SubType == "Leave" then
-                for Idx, Player in next, Chat.Players do
-                    if Player.Id == Data.Id then
-                        Chat:CreateMessage({
-                            Name = "System",
-                            Message = ("@%s left the server."):format(Player.Name),
-                            Color = {
-                                80,
-                                80,
-                                80
-                            }
-                        }, Chat.Channels["General"].ScrollingFrame)
-                        table.remove(Chat.Players, Idx)
-                        break
-                    end
-                end
-            end
-            if Data.SubType == "Info" then
-                ROCHAT_Config.Id = Data.Id
-                ROCHAT_Config.Server = {
-                    MessageLogs = Data.MessageLogs,
-                    Metadata = Data.Metadata
-                }
-
-                Chat.Channels = Data.Channels
-                Chat.Ranks = Data.Metadata.Ranks
-                Chat.Channels["Default"] = {
-                    Id = -1,
-                    Name = "Default",
-                    Description = "This is the default chat used by roblox.",
-                    Messages = {},
-                    ScrollingFrame = Chat.ScrollingFrame
-                    -- Icon = 
-                }
-
-                for _, Channel in next, Data.Channels do
-                    if _ == "Default" then continue end
-                    Data.Channels[_].ScrollingFrame = Chat:CreateChannel(Channel)
-                    for _, Message in next, Channel.Messages do
-
-                    end
-                end
-            end
-        end
-        if Data.Type == "Rank" then
-            if Data.SubType == "Set" then
-                for _, Rank in next, Chat.Ranks do
-                    if Rank.Name == Data.Rank then
-                        table.insert(Rank.Fingerprints, Data.Fingerprint)
-                    end
-                end
-            end
-            if Data.SubType == "Remove" then
-                for _, Rank in next, Chat.Ranks do
-                    if Rank.Name == Data.Rank then
-                        table.remove(Rank.Fingerprints, table.find(Rank.Fingerprints, Data.Fingerprint))
-                    end
-                end
-            end
-        end
-    end)
-
     ROCHAT_Config.Client  = Client
     ROCHAT_Config.Enabled = ROCHAT_Config.Enabled or true
 
@@ -201,11 +64,6 @@ return function(Release, Fingerprint)
     Chat.ScrollingFrame = Players.LocalPlayer.PlayerGui.Chat.Frame.ChatChannelParentFrame.Frame_MessageLogDisplay.Scroller
     Chat.ChatBar        = Players.LocalPlayer.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar
 
-    -- Chat.ChatBar.TextBounds.TextScaled = false
-    -- task.wait(0.2)
-    -- Chat.ChatBar.TextBounds.TextScaled = true
-
-    -- Embed.ScrollingFrame = Chat.ScrollingFrame
 
     local EnterConnection = getconnections(Chat.ChatBar.FocusLost)[1]
     local customConnection
@@ -328,8 +186,165 @@ return function(Release, Fingerprint)
             end
         end
     end)
-
+    
     coroutine.resume(ChannelCheck)
+
+    Client:OnRecieve(function(message)
+        local Data = Utility:JSON(message)
+        -- print(message)
+        if Data.Type == "UI" then
+            -- if Data.SubType == "Interact" then
+            --     Interact.Callbacks[Data.Id](Data.Value)
+            -- end
+            -- if Data.SubType == "Create" then
+            --     Embed.new(Data.Value)
+            -- end
+            if Data.SubType == "Destroy" then
+                local MessageData = Chat:getMessage(Data.Channel, Data.Id)
+                MessageData.Frame:Destroy()
+            end
+            if Data.SubType == "RevokeReact" then
+                local MessageData = Chat:getMessage(Data.Channel, Data.MessageId)
+                local Reaction = MessageData.Reactions[Data.Reaction]
+                local Frame = Reaction[Data.FromId]
+                if not Frame then return end
+                local ReactionCount = countDict(Reaction)
+                if ReactionCount == 1 then
+                    MessageData.Reactions[Data.Reaction] = nil
+                    local ReactionFrame = Frame.Parent
+                    local Counter = countDict(MessageData.Reactions)
+                    if Counter == 0 then
+                        ReactionFrame.Parent.Size = ReactionFrame.Parent.Size - UDim2.new(0, 0, 0, 28)
+                        ReactionFrame:Destroy()
+                        return
+                    end
+                    Frame:Destroy()
+                    return
+                end
+                Reaction[Data.FromId] = nil
+                Frame.TextLabel.Text = tostring(ReactionCount - 1)
+            end
+            if Data.SubType == "React" then
+                Chat:CreateReaction(Data)
+            end
+            if Data.SubType == "Edit" then
+                local MessageData = Chat:getMessage(Data.Channel, Data.Id)
+
+                MessageData.Order = MessageData.Frame.LayoutOrder
+                MessageData.Message = Data.Message
+                MessageData.MessageId = Data.Id
+                MessageData.Id = Data.From
+
+                MessageData.Frame:Destroy()
+
+                MessageData.Frame = Chat:CreateMessage(MessageData, Chat.Channels[Data.Channel].ScrollingFrame)
+            end
+            if Data.SubType == "Chat" then
+                task.spawn(function()
+                    for _, Callback in next, Chat.OnChat.Callbacks do
+                        pcall(Callback, getDataFromId(Data.Id), Data)
+                    end
+                end)
+                Chat:CreateMessage(Data, Chat.Channels[Data.Channel].ScrollingFrame)
+            end
+        end
+        if Data.Type == "Connection" then
+            if Data.SubType == "Join" then
+                Data.Type = nil
+                Data.SubType = nil
+                table.insert(Chat.Players, Data)
+                repeat task.wait() until Chat.Channels["General"] and Chat.Channels["General"].ScrollingFrame
+                Chat:CreateMessage({
+                    Name = "System",
+                    Message = ("@%s connected to the server."):format(Data.Name),
+                    Color = {
+                        80,
+                        80,
+                        80
+                    }
+                }, Chat.Channels["General"].ScrollingFrame)
+            end
+            if Data.SubType == "Leave" then
+                for Idx, Player in next, Chat.Players do
+                    if Player.Id == Data.Id then
+                        Chat:CreateMessage({
+                            Name = "System",
+                            Message = ("@%s left the server."):format(Player.Name),
+                            Color = {
+                                80,
+                                80,
+                                80
+                            }
+                        }, Chat.Channels["General"].ScrollingFrame)
+                        table.remove(Chat.Players, Idx)
+                        break
+                    end
+                end
+            end
+            if Data.SubType == "Info" then
+                ROCHAT_Config.Id = Data.Id
+                ROCHAT_Config.Server = {
+                    MessageLogs = Data.MessageLogs,
+                    Metadata = Data.Metadata
+                }
+
+                Chat.Channels = Data.Channels
+                Chat.Players = Data.Players
+                Chat.Ranks = Data.Metadata.Ranks
+                Chat.Channels.Default = {
+                    Id = -1,
+                    Name = "Default",
+                    Description = "This is the default chat used by roblox.",
+                    Messages = {},
+                    ScrollingFrame = Chat.ScrollingFrame
+                }
+                -- print(Chat.ScrollingFrame:GetFullName())
+                if Chat.ScrollingFrame.Parent.Parent:FindFirstChild("Channels") then
+                    Chat.ScrollingFrame.Parent.Parent:FindFirstChild("Channels"):Destroy()
+                    for _, ScrollingFrame in next, Chat.ScrollingFrame.Parent.Parent:GetChildren() do
+                        if ScrollingFrame.Name == "ScrollingFrame" then
+                            ScrollingFrame:Destroy()
+                        end
+                    end
+                    Chat.CurrentChannel = "Default"
+                end
+
+                for _, Channel in next, Data.Channels do
+                    if _ == "Default" then continue end
+                    Data.Channels[_].ScrollingFrame = Chat:CreateChannel(Channel)
+                    for i, Message in next, Channel.Messages do
+                        print(game:GetService("HttpService"):JSONEncode(Message))
+                        Chat:CreateMessage(Message, Data.Channels[_].ScrollingFrame)
+                    end
+                end
+            end
+        end
+        if Data.Type == "Rank" then
+            if Data.SubType == "Set" then
+                for _, Rank in next, Chat.Ranks do
+                    if Rank.Name == Data.Rank then
+                        table.insert(Rank.Fingerprints, Data.Fingerprint)
+                    end
+                end
+            end
+            if Data.SubType == "Remove" then
+                for _, Rank in next, Chat.Ranks do
+                    if Rank.Name == Data.Rank then
+                        table.remove(Rank.Fingerprints, table.find(Rank.Fingerprints, Data.Fingerprint))
+                    end
+                end
+            end
+        end
+        if Data.Error then
+            error(Data.Error)
+        end
+    end)
+
+    -- Chat.ChatBar.TextBounds.TextScaled = false
+    -- task.wait(0.2)
+    -- Chat.ChatBar.TextBounds.TextScaled = true
+
+    -- Embed.ScrollingFrame = Chat.ScrollingFrame
 
     -- Players.LocalPlayer.Chatted:Connect(function(Message)
     --     local function runCommand(command, func)
