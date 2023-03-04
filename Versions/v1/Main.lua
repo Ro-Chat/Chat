@@ -313,7 +313,7 @@ return function(Release, Fingerprint)
                     if _ == "Default" then continue end
                     Data.Channels[_].ScrollingFrame = Chat:CreateChannel(Channel)
                     for i, Message in next, Channel.Messages do
-                        print(game:GetService("HttpService"):JSONEncode(Message))
+--                         print(game:GetService("HttpService"):JSONEncode(Message))
                         Chat:CreateMessage(Message, Data.Channels[_].ScrollingFrame)
                     end
                 end
