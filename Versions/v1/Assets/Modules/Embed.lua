@@ -56,10 +56,6 @@ Embed.new = function(xml, ScrollingFrame)
                 if ObjInstance.AbsoluteSize.X + ObjInstance.AbsolutePosition.X + 4 > EmbedInstance.AbsoluteSize.X + EmbedInstance.AbsolutePosition.X - 4 then
                     EmbedInstance.Size = EmbedInstance.Size + UDim2.new(0, (ObjInstance.AbsoluteSize.X + ObjInstance.AbsolutePosition.X + 4) - (EmbedInstance.AbsoluteSize.X + EmbedInstance.AbsolutePosition.X), 0, 0)
                 end
-
-                if ObjInstance.AbsoluteSize.Y + ObjInstance.AbsolutePosition.X + 4 > EmbedInstance.AbsoluteSize.X + EmbedInstance.AbsolutePosition.Y - 4 then
-                    EmbedInstance.Size = EmbedInstance.Size + UDim2.new(0, (ObjInstance.AbsoluteSize.Y + ObjInstance.AbsolutePosition.X + 4) - (EmbedInstance.AbsoluteSize.X + EmbedInstance.AbsolutePosition.X), 0, 0)
-                end
             end
         end
         if Tag.Tag == "textlabel" or Tag.Tag == "label" then
