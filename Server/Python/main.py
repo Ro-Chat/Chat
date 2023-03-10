@@ -1,6 +1,10 @@
 import asyncio
 import websockets
 import json
+import requests
+import bs4
+import base64
+
 from hashlib import sha256
 
 CLIENTS = set()
@@ -31,6 +35,51 @@ channels = {
 }
 
 message_logs = []
+
+
+def getExtras(message):
+    ret = {
+      "Extras" : {},
+      "Images": {}
+    }
+    if "http" in message:
+        for link in message.split("http"):
+            link = "http" + link.split(" ")[0]
+
+            if not ("://" in link):
+                continue
+
+            response = requests.get(link, stream = True)
+            response.raw.decode_content = True
+
+            with response.raw as res:
+              buffer = res.read()
+              if buffer[:1] != b"<" and buffer[:1] != b"\r" and buffer[:1] != b"\n":
+                ret["Images"][link] = base64.encodebytes(buffer).decode("utf-8")
+                continue
+
+            ret["Extras"][link] = {}
+            
+            soup = bs4.BeautifulSoup(buffer.decode("utf-8"), "lxml")
+
+            for meta in soup.find_all("meta"):
+                name = "name" in meta.attrs and meta.attrs[
+                    "name"] or "property" in meta.attrs and meta.attrs[
+                        "property"]
+                content = "content" in meta.attrs and meta.attrs["content"]
+                if name == "og:image":
+                  with requests.get(content, stream = True).raw as request:
+                    image = base64.encodebytes(request.read()).decode("utf-8")
+                    
+                    if len(image) > 4000000:
+                      image = "Exceeds 4MB size"
+                      
+                    ret["Extras"][link][name] = image
+                  continue
+                
+                ret["Extras"][link][name] = content
+
+    return ret
 
 
 def getMetadata():
@@ -89,7 +138,7 @@ def checkPrivilege(fingerprint, level):
 def checkRank(fingerprint, rank):
     metadata = getMetadata()
     fingerprint = sha256(bytes(fingerprint.encode())).hexdigest()
-    
+
     if "Owner" in metadata and metadata["Owner"] == fingerprint:
         return True
 
@@ -97,15 +146,20 @@ def checkRank(fingerprint, rank):
         if fingerprint in rank["Fingerprints"]:
             return True
 
+
 def getChannels(fingerprint):
     Channels = {}
     for Channel in channels:
+        if "Fingerprints" in channels[Channel]:
+            for Fingerprint in channels[Channel]["Fingerprints"]:
+                if fingerprint == Fingerprint:
+                    Channels[Channel] = Channels[Channel]
         if "Ranks" in channels[Channel]:
-          for Rank in channels[Channel]:
-            if checkRank(fingerprint, Rank):
-              Channels[Channel] = channels[Channel]
+            for Rank in channels[Channel]["Ranks"]:
+                if checkRank(fingerprint, Rank):
+                    Channels[Channel] = channels[Channel]
         else:
-          Channels[Channel] = channels[Channel]
+            Channels[Channel] = channels[Channel]
 
     return Channels
 
@@ -120,7 +174,7 @@ def newId():
     ret = 0
     for Client in client_data:
         if client_data[Client]["Id"] >= ret:
-            ret = client_data[Client]["Id"]
+            ret = client_data[Client]["Id"] + 1
 
     return ret
 
@@ -144,8 +198,10 @@ async def handler(websocket):
     try:
         async for data in websocket:
             data = json.loads(data)
+
             if not "Type" in data:
                 return
+
             if data["Type"] == "Rank":
                 if data["SubType"] == "Set":
                     if checkPrivilege(client_data[websocket]["Fingerprint"],
@@ -190,9 +246,22 @@ async def handler(websocket):
 
             if data["Type"] == "File":
                 if data["Name"] == "PROFILE_IMG":
-                    if websocket in client_data:
-                        client_data[websocket]["Image"] = data["Bin"]
+                    if len(data["Bin"]) < 2000000:
+                        if websocket in client_data:
+                            client_data[websocket]["Image"] = data["Bin"]
+                    else:
+                        await websocket.send(
+                            "{\"Error\": \"Profile image exceeds maximimum size of 2MB.\"}"
+                        )
+
+            # if data["Type"] == "Group":
+            # if data["SubType"] == "Create":
+            # if data["SubType"] == "Add":
+            # if data["SubType"] == "Remove":
+            # if data["SubType"] == "Kick":
             if data["Type"] == "Connection":
+                if data["SubType"] == "Leave":
+                    return
                 if data["SubType"] == "Join":
                     for client in client_data:
                         if client_data[client]["Fingerprint"] == data[
@@ -215,32 +284,43 @@ async def handler(websocket):
                             "Sec-WebSocket-Accept"),
                         "Interactions": [],
                         "Id":
-                        newId()
+                        newId(),
                     }
                     metadata = getMetadata()
-                    await websocket.send(
-                        json.dumps({
-                            "Type":
-                            "Connection",
-                            "SubType":
-                            "Info",
+                    temp = [
+                        {
+                            "Name":
+                            client_data[client]["Name"],
+                            "Color":
+                            client_data[client]["Color"],
+                            "Fingerprint":
+                            sha256(client_data[client]
+                                   ["Fingerprint"].encode()).hexdigest(),
                             "Id":
-                            client_data[websocket]["Id"],
-                            "Metadata":
-                            metadata,
-                            # "MessageLogs": message_logs,
-                            "Key":
-                            websocket.request_headers.get_all(
-                                "Sec-WebSocket-Accept"),
-                            "Channels":
-                            getChannels(client_data[websocket]["Fingerprint"])
-                        }))
-                    
+                            client_data[client]["Id"]
+                        } for client in client_data
+                    ]
+                    send = {
+                        "Type":
+                        "Connection",
+                        "SubType":
+                        "Info",
+                        "Id":
+                        client_data[websocket]["Id"],
+                        "Players":
+                        temp,
+                        "Metadata":
+                        metadata,
+                        "Key":
+                        websocket.request_headers.get_all(
+                            "Sec-WebSocket-Accept"),
+                        "Channels":
+                        getChannels(client_data[websocket]["Fingerprint"])
+                    }
+                    await websocket.send(json.dumps(send))
                     data["Fingerprint"] = sha256(
                         bytes(data["Fingerprint"].encode())).hexdigest()
                     data["Id"] = client_data[websocket]["Id"]
-                    # await broadcast(json.dumps(data))
-                    # Keep for debugging
                     await broadcast(json.dumps(data))
             if data["Type"] == "UI":
                 if data["SubType"] == "Destroy":
@@ -320,101 +400,97 @@ async def handler(websocket):
                 if data["SubType"] == "Chat":
                     Channel = channels[data["Channel"]]
                     User = client_data[websocket]
+                    send = {}
 
-                    data["Id"] = User["Id"]
-                    data["Name"] = User["Name"]
-                    data["Color"] = User["Color"]
-                    data["MessageId"] = len(
+                    send["Type"] = "UI"
+                    send["SubType"] = "Chat"
+                    send["Id"] = User["Id"]
+                    send["Name"] = User["Name"]
+                    send["Color"] = User["Color"]
+                    send["Image"] = User["Image"]
+                    send["Message"] = data["Message"]
+                    send["Channel"] = data["Channel"]
+
+                    send["MessageId"] = len(
                         Channel["Messages"]) == 0 and 1 or Channel["Messages"][
                             len(Channel["Messages"]) - 1]["Id"] + 1
 
-                    isPrivate = "To" in data
-
                     Channel["Messages"].append({
-                        "From":
-                        User["Id"],
-                        "Message":
-                        not isPrivate and data["Message"] or "REDACTED",
-                        "Id":
-                        data["MessageId"],
-                        "Channel":
-                        data["Channel"],
+                        "From": User["Id"],
+                        "Name": send["Name"],
+                        "Image": send["Image"],
+                        "Color": send["Color"],
+                        "Message": send["Message"],
+                        "Id": send["MessageId"],
+                        "MessageId": send["MessageId"],
+                        "Channel": send["Channel"],
                         "Reactions": {}
                     })
-                    if not isPrivate:
-                        if not ("Ranks" in Channel):
-                            await broadcast(json.dumps(data))
-                        else:
-                            for Rank in Channel["Ranks"]:
-                                await broadcast(json.dumps(data), rank=Rank)
+                    if not ("Ranks" in Channel) and not ("Fingerprints"
+                                                         in Channel):
+                        await broadcast(json.dumps(send))
+                        extras = getExtras(data["Message"])
+                        extras["Type"] = "UI"
+                        extras["SubType"] = "ChatExtra"
+                        extras["MessageId"] =  send["MessageId"]
+                        extras["Channel"] = send["Channel"]
+                  
+                        await broadcast(json.dumps(extras))
                     else:
-                        toClient = getData(data["To"])
-                        await toClient.send(json.dumps(data))
-
-                if data["SubType"] == "CreateInteraction":
-                    try:
-                        client_data[websocket]["Interactions"].append(
-                            data["Id"])
-                    except Exception:
-                        pass
-                if data["SubType"] == "Interact":
-                    try:
-                        for client in client_data:
-                            for interaction in client_data[client][
-                                    "Interactions"]:
-                                if interaction == data["Id"]:
-                                    await client.send(json.dumps(data))
-                    except Exception:
-                        pass
+                        if "Ranks" in Channel:
+                            extras = {
+                              "Extras": getExtras(data["Message"]),
+                              "Type": "UI",
+                              "SubType": "ChatExtra",
+                              "MessageId": send["MessageId"],
+                              "Channel": send["Channel"]
+                            }
+                            for Rank in Channel["Ranks"]:
+                                await broadcast(json.dumps(send), rank=Rank)
+                                await broadcast(json.dumps(extras), rank=Rank)
+                        else:
+                            await broadcast(
+                                json.dumps(send),
+                                fingerprints=Channel["Fingerprints"])
+                            extras = {
+                              "Extras": getExtras(data["Message"]),
+                              "Type": "UI",
+                              "SubType": "ChatExtra",
+                              "MessageId": send["MessageId"],
+                              "Channel": send["Channel"]
+                            }
+                            await broadcast(
+                                json.dumps(extras),
+                                fingerprints=Channel["Fingerprints"])
             pass
-    # except Exception as e:
-    #     print(e)
-    #     Id = client_data[websocket]["Id"]
-    #     await broadcast(
-    #         json.dumps({
-    #             "Type": "Connection",
-    #             "SubType": "Leave",
-    #             "Id": Id
-    #         }))
-    #     Idx = 0
-    #     for Json in message_logs:
-    #         if Json["From"] == Id:
-    #             message_logs.pop(Idx)
-    #         Idx += 1
-    #     del client_data[websocket]
-    #     CLIENTS.remove(websocket)
     finally:
-        # try:
-        Id = client_data[websocket]["Id"]
-        await broadcast(json.dumps({
-            "Type": "Connection",
-            "SubType": "Leave",
-            "Id": Id
-        }),
-                        from_client=websocket)
-        for Channel in channels:
-            Idx = 0
-            for Message in channels[Channel]["Messages"]:
-                if Message["From"] == Id:
-                    channels[Channel]["Messages"].pop(Idx)
-            Idx += 1
-        del client_data[websocket]
-        # except Exception:
-        # pass
-        # finally:
-        # try:
+        if websocket in client_data:
+            Id = client_data[websocket]["Id"]
+            for Channel in channels:
+                for Idx in range(
+                        len(channels[Channel]["Messages"]) - 1, -1, -1):
+                    if channels[Channel]["Messages"][Idx]["From"] == Id:
+                        channels[Channel]["Messages"].pop(Idx)
+            await broadcast(json.dumps({
+                "Type": "Connection",
+                "SubType": "Leave",
+                "Id": Id
+            }), from_client=websocket)
+            del client_data[websocket]
         CLIENTS.remove(websocket)
-        # except Exception:
-        #     pass
 
 
 async def broadcast(message, from_client=None, rank=None):
     for websocket in CLIENTS.copy():
         try:
             if type(message) == dict:
-              message = json.dumps(dict)
-            if rank and not checkRank(client_data[websocket]["Fingerprint"], rank):
-              continue
+                message = json.dumps(dict)
+            try:
+                if rank and not checkRank(
+                        client_data[websocket]["Fingerprint"], rank):
+                    continue
+            except Exception:
+                pass
             await websocket.send(message)
         except websockets.ConnectionClosed:
             pass
