@@ -26,6 +26,38 @@ function Image.new(data)
            Type = "WEBP"
        }
    end
+   if data:sub(utf8.offset(data, 4), utf8.offset(data, 7)) == "ftyp" then
+    local Data = {
+        Type = "MP4"
+    }
+    local str = String.new(data)
+    local Address = 0x8
+
+    Data.SubType = str:reader(Address, 4)
+    Data.MinorVersion = str:reader(Address, 4, str.isub)
+
+    Data.Freespace = {
+        Size = str:reader(Address, 4, str.isub),
+    }
+
+    Data.Freespace.Type = str:reader(Address, Data.Freespace - 4)
+    Data.Movie = {
+        Size = str:reader(Address, 4, str.isub),
+        Type = str:reader(Address, 4)
+    }
+    Data.Movie.Buffer = str:reader(Address, Data.Movie.Size)
+
+    if Data.Movie.Type == "moov" or Data.Movie.Type == "mvhd" then
+        
+    end
+    print(Address)
+
+    return {
+        Type = "MP4",
+        SubType = str:sub(8, 11),
+        MinorVersion = str:sub(12, 15),
+    }
+   end
    if data:sub(1, 3) == "GIF" then
       local str = String.new(data)
       

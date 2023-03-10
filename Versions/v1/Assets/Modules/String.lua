@@ -20,6 +20,12 @@ String.new = function(str)
         -- Add regex shit later
     end
     
+    function string:reader(address, offset, sub_function)
+        sub_function = sub_function or string.sub
+        local Result = sub_function(string, address, address + offset)
+        address = address + offset
+    end
+
     function string:isub(sbegin, send, endianness)
         return Int.from_bytes(string.string:sub(utf8.offset(string.string, sbegin), utf8.offset(string.string, send)), endianness)
     end

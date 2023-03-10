@@ -26,7 +26,8 @@ Extra.new = function(data)
         Instance.new("UICorner", extra.instance).CornerRadius = UDim.new(0, 3)
         extra.instance.BackgroundTransparency = 1
         extra.instance.Text = data.data.content
-        extra.instance.Size = UDim2.new(0, 178, 0, data.data.fontsize + 2 or 16)
+        extra.instance.LayoutOrder = data.order
+        extra.instance.Size = UDim2.new(0, 178, 0, data.data.fontsize and data.data.fontsize + 2 or 16)
         extra.instance.Font = Enum.Font.SourceSansBold
         extra.instance.TextColor3 = data.data.color or Color3.fromRGB(235, 235, 235)
         extra.instance.TextSize = data.data.fontsize or 14
@@ -38,7 +39,8 @@ Extra.new = function(data)
     if extra.type == "imagelabel" then
         extra.instance = Instance.new("ImageLabel", extra.parent)
         Instance.new("UICorner", extra.instance).CornerRadius = UDim.new(0, 3)
-        local image_data = Extra.Request({
+        extra.instance.LayoutOrder = data.order
+        local image_data = data.data.content or Extra.Request({
             Url = data.data.url,
             Method = "GET"
         }).Body
@@ -61,6 +63,8 @@ Extra.new = function(data)
     end
     
     extra.instance.LayoutOrder = extra.order or (#extra.parent:GetChildren() - 1)
+
+    return extra
 end
 
 getgenv().Interact = Interact or {
@@ -182,30 +186,36 @@ Embed.new = function(data)
     
     local embed = Instance.new("Frame")
     Instance.new("UICorner", embed).CornerRadius = UDim.new(0, 5)
+
     local cover = Instance.new("Frame")
     local color = Instance.new("Frame")
-    Instance.new("UICorner", color).CornerRadius = UDim.new(0, 4)
+    Instance.new("UICorner", color).CornerRadius = UDim.new(0, 5)
+
     local content = Instance.new("ScrollingFrame")
     content.CanvasSize = UDim2.new(0.95, 0, 0.95, 0)
+
+    local UIListLayout = Instance.new("UIListLayout", content)
+    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
     embed.Name = "embed"
     embed.BackgroundColor3 = Color3.new(0.184314, 0.192157, 0.211765)
     embed.BorderSizePixel = 0
+    embed.Position = UDim2.new(0, 8, 0, 0)
     embed.Size = UDim2.new(0, 196, 0, 136)
 
     cover.Name = "cover"
     cover.Parent = embed
     cover.BackgroundColor3 = Color3.new(0.184314, 0.192157, 0.211765)
     cover.BorderSizePixel = 0
-    cover.Position = UDim2.new(0.015, 0, 0, 0)
-    cover.Size = UDim2.new(0, 5, 1, 0)
+    cover.Position = UDim2.new(0, 4, 0, 0)
+    cover.Size = UDim2.new(0, 4, 1, 0)
     cover.ZIndex = 2
 
     color.Name = "color"
     color.Parent = embed
     color.BackgroundColor3 = _embed.color
     color.BorderSizePixel = 0
-    color.Size = UDim2.new(0, 9, 1, 0)
+    color.Size = UDim2.new(0, 6, 1, 0)
 
     content.Name = "content"
     content.Parent = embed
@@ -214,7 +224,7 @@ Embed.new = function(data)
     content.BackgroundTransparency = 1
     content.BorderSizePixel = 0
     content.ScrollBarThickness = 6
-    content.Position = UDim2.new(0.02, 0, 0.03125, 0)
+    content.Position = UDim2.new(0, 8, 0, 4)
     content.Size = UDim2.new(0.95, 0, 1, 0)
     content.CanvasSize = UDim2.new(0, 0, 0, 0)
 

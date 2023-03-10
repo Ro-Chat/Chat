@@ -17,9 +17,14 @@ local Cache = {
         end
       
         return {
+            Index = #self.CachedImages,
             Asset = Asset(Path),
             Path = Path,
-            Buffer = readfile(Path)
+            Buffer = readfile(Path),
+            Clear = function(this)
+                delfile(this.Path)
+                table.remove(self.CachedImages, this.Index)
+            end
         }
     end,
     Clear = function(self)

@@ -22,12 +22,21 @@ return function(Release, Fingerprint)
         return result
     end
 
+    local Request = syn and syn.request or http and http.request or request
+    local base64 = {
+        encode = syn and syn.crypt.base64.encode or crypt and crypt.base64encode,
+        decode = syn and syn.crypt.base64.decode or crypt and crypt.base64decode
+    }
+
     local Players = game:GetService("Players")
+    local HttpService = game:GetService("HttpService")
+
+    local LocalPlayer = Players.LocalPlayer
 
     getgenv().Chat    = Chat or Import("Chat")
     getgenv().Utility = Utility or Import("Utility")
     getgenv().Plugin  = Plugin or Import("Plugin")
-    -- local Embed   = Import("Embed")
+    getgenv().Embed   = Embed or Import("Embed")
 
     local Client = Utility:Client({
         Url = ROCHAT_Config.WSS,
@@ -51,19 +60,11 @@ return function(Release, Fingerprint)
         return Count
     end
 
-    -- local function getMessage(channel, id)
-    --     for _, Message in next, Chat.Channels[channel].Messages do
-    --         if Message.Id == id or Message.MessageId == id then return Message end
-    --     end
-    -- end
-
     ROCHAT_Config.Client  = Client
     ROCHAT_Config.Enabled = ROCHAT_Config.Enabled or true
 
-    -- Change this for custom chats
     Chat.ScrollingFrame = Players.LocalPlayer.PlayerGui.Chat.Frame.ChatChannelParentFrame.Frame_MessageLogDisplay.Scroller
     Chat.ChatBar        = Players.LocalPlayer.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar
-
 
     local EnterConnection = getconnections(Chat.ChatBar.FocusLost)[1]
     local customConnection
@@ -189,9 +190,11 @@ return function(Release, Fingerprint)
     
     coroutine.resume(ChannelCheck)
 
+    -- print("Recieve")
     Client:OnRecieve(function(message)
-        local Data = Utility:JSON(message)
         -- print(message)
+        local Data = Utility:JSON(message)
+        
         if Data.Type == "UI" then
             -- if Data.SubType == "Interact" then
             --     Interact.Callbacks[Data.Id](Data.Value)
@@ -237,7 +240,84 @@ return function(Release, Fingerprint)
 
                 MessageData.Frame:Destroy()
 
-                MessageData.Frame = Chat:CreateMessage(MessageData, Chat.Channels[Data.Channel].ScrollingFrame)
+                MessageData.Frame = Chat:CreateMessage(MessageData, Chat.Channels[Data.Channel].ScrollingFrame).Frame
+            end
+            if Data.SubType == "ChatExtra" then
+                -- should change this so the client that sent the url makes the request then sends it to the server instead of the server making the request but whatever lol
+
+                local Message = Chat:getMessage(Data.Channel, Data.MessageId)
+                local Extras = Data.Extras
+                local Images = Data.Images
+
+                -- table.foreach(Images, print)
+
+                for link, b64 in next, Images do
+                    local Buffer = base64.decode(b64)
+                    local ImageInfo = ImageLib.new(Buffer)
+                    if ImageInfo.Type ~= "MP4" then
+                        
+                        local ImageLabel = Instance.new("ImageLabel")
+                        ImageLabel.BackgroundTransparency = 1
+                        -- Change dimensions so they fit into the chat
+
+                        local AbsoluteSize = Chat.ScrollingFrame.AbsoluteSize
+
+                        if ImageInfo.Height > AbsoluteSize.Y then
+                            ImageInfo.Height = AbsoluteSize.Y - 4
+                            ImageInfo.Width = ImageInfo.WidthOffset * ImageInfo.Height
+                        end
+
+                        if ImageInfo.Width > AbsoluteSize.X then
+                            ImageInfo.Width = AbsoluteSize.X - 4
+                            ImageInfo.Height = ImageInfo.HeightOffset * ImageInfo.Width
+                        end
+
+                        ImageLabel.Size = UDim2.new(0, ImageInfo.Width, 0, ImageInfo.Height)
+
+                        -- Make image
+
+                        local Path = ("ROCHAT_IMAGE_%s.%s"):format(math.random(1, 100), ImageInfo.Type)
+                        writefile(Path, Buffer)
+                        local Cached = Cache:GetAsset(Path)
+
+                        ImageLabel.Image = Cached.Asset
+                        
+                        task.delay(2, function()
+                            Cached:Clear()
+                        end)
+                        
+                        Instance.new("UICorner", ImageLabel).CornerRadius = UDim.new(0, 6)
+                        ImageLabel.Parent = Message.Frame
+                        ImageLabel.Position = UDim2.new(0, 8, 0, Message.Frame.AbsoluteSize.Y + 4)
+                        Message.Frame.Size = Message.Frame.Size + UDim2.new(0, 0, 0, ImageLabel.AbsoluteSize.Y + 4)
+                    else
+                        -- local Video = Instance.new("VideoFrame")
+                    end
+                end
+
+                -- too lazy rn lol
+
+                -- for link, data in next, Extras do
+                --     -- Build embed XML
+
+                --     local EmbedBuffer = ("<embed color=\"Color3.fromHex('%s')\" resize=\"true\">"):format(data["theme-color"] and data["theme-color"]:sub(1, 1) == "#" and data["theme-color"] or "#585858")
+
+                --     EmbedBuffer = data["og:site_name"] and ("%s\n<label fontsize=\"8\">%s</label>"):format(EmbedBuffer, data["og:site_name"]) or EmbedBuffer
+                --     EmbedBuffer = (data["og:title"] or data["title"]) and ("%s\n<label fontsize=\"18\">%s</label>"):format(EmbedBuffer, (data["og:title"] or data["title"])) or EmbedBuffer
+                --     EmbedBuffer = data["og:description"] and ("%s\n<label>%s</label>"):format(EmbedBuffer, data["og:description"]) or EmbedBuffer
+
+                --     EmbedBuffer = EmbedBuffer .. "\n</embed>"
+
+                --     print(EmbedBuffer)
+
+                --     -- Make embed based off of XML
+
+                --     local embed = Embed.new(EmbedBuffer, Message.Frame)
+                --     local instance = embed.instance
+                --     instance.Position = UDim2.new(0, 8, 0, Message.Frame.AbsoluteSize.Y)
+                --     Message.Frame.Size = Message.Frame.Size + UDim2.new(0, 0, 0, instance.AbsoluteSize.Y)
+                -- end
+
             end
             if Data.SubType == "Chat" then
                 task.spawn(function()
@@ -253,7 +333,9 @@ return function(Release, Fingerprint)
                 Data.Type = nil
                 Data.SubType = nil
                 table.insert(Chat.Players, Data)
+
                 repeat task.wait() until Chat.Channels["General"] and Chat.Channels["General"].ScrollingFrame
+
                 Chat:CreateMessage({
                     Name = "System",
                     Message = ("@%s connected to the server."):format(Data.Name),
@@ -263,6 +345,22 @@ return function(Release, Fingerprint)
                         80
                     }
                 }, Chat.Channels["General"].ScrollingFrame)
+
+                local ImageBin
+
+                if ROCHAT_Config.Profile.User.Image then
+                    ImageBin = readfile(ROCHAT_Config.Profile.User.Image)
+                end
+
+                ImageBin = ImageBin or Request({
+                    Method = "GET",
+                    Url = HttpService:JSONDecode(Request({
+                        Method = "GET",
+                        Url = ("https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=%s&size=48x48&format=Png&isCircular=true"):format(LocalPlayer.UserId)
+                    }).Body).data[1].imageUrl
+                }).Body
+
+                Client:SendFile("PROFILE_IMG", ImageBin)
             end
             if Data.SubType == "Leave" then
                 for Idx, Player in next, Chat.Players do
@@ -296,9 +394,12 @@ return function(Release, Fingerprint)
                     Name = "Default",
                     Description = "This is the default chat used by roblox.",
                     Messages = {},
-                    ScrollingFrame = Chat.ScrollingFrame
+                    ScrollingFrame = Chat.ScrollingFrame,
+                    Chat = function(self, Data)
+                        return Chat:CreateMessage(Data, self)
+                    end
                 }
-                -- print(Chat.ScrollingFrame:GetFullName())
+
                 if Chat.ScrollingFrame.Parent.Parent:FindFirstChild("Channels") then
                     Chat.ScrollingFrame.Parent.Parent:FindFirstChild("Channels"):Destroy()
                     for _, ScrollingFrame in next, Chat.ScrollingFrame.Parent.Parent:GetChildren() do
@@ -311,10 +412,9 @@ return function(Release, Fingerprint)
 
                 for _, Channel in next, Data.Channels do
                     if _ == "Default" then continue end
-                    Data.Channels[_].ScrollingFrame = Chat:CreateChannel(Channel)
+                    Chat.Channels[_] = Chat:CreateChannel(Channel)
                     for i, Message in next, Channel.Messages do
---                         print(game:GetService("HttpService"):JSONEncode(Message))
-                        Chat:CreateMessage(Message, Data.Channels[_].ScrollingFrame)
+                        Chat:CreateMessage(Message, Channel.ScrollingFrame)
                     end
                 end
             end
@@ -339,33 +439,4 @@ return function(Release, Fingerprint)
             error(Data.Error)
         end
     end)
-
-    -- Chat.ChatBar.TextBounds.TextScaled = false
-    -- task.wait(0.2)
-    -- Chat.ChatBar.TextBounds.TextScaled = true
-
-    -- Embed.ScrollingFrame = Chat.ScrollingFrame
-
-    -- Players.LocalPlayer.Chatted:Connect(function(Message)
-    --     local function runCommand(command, func)
-    --         if Message:match("^/" .. command) then
-    --             local Args = Message:split(" ")
-    --             table.remove(Args, 1)
-    --             func(unpack(Args))
-    --         end
-    --     end
-
-    --     -- print(Chat.CurrentChannel)
-        
-    --     -- runCommand("enable", function()
-    --     --     ROCHAT_Config.Enabled = true
-    --     --     Chat.ChatBar.Text = ""
-    --     --     EnterConnection:Disable()
-    --     --     customConnection = Chat.ChatBar.FocusLost:Connect(FocusLost)
-    --     -- end)
-    -- end)
-    -- if ROCHAT_Config.Enabled then
-    --     EnterConnection:Disable()
-    --     customConnection = Chat.ChatBar.FocusLost:Connect(FocusLost)
-    -- end
 end

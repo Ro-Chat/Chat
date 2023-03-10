@@ -1,69 +1,111 @@
 -- local XML = Import("XML")
--- local UI  = Import("UI")
+local UI  = Import("UI")
 
--- local Extra    = UI.Extra
--- local EmbedUI  = UI.Embed
--- local Interact = UI.Interact
+local Extra    = UI.Extra
+local EmbedUI  = UI.Embed
+local Interact = UI.Interact
 
--- Extra.Request  = syn and syn.request
--- Extra.Image    = Image
--- Extra.GetAsset = syn and getsynasset or getcustomasset
+Extra.Request  = syn and syn.request
+Extra.Image    = Image
+Extra.GetAsset = syn and getsynasset or getcustomasset
 
--- Interact.SendFunction = function(data)
---     ROCHAT_Config.Client:Send(data)
--- end
+Interact.SendFunction = function(data)
+    ROCHAT_Config.Client:Send(data)
+end
 
--- local Embed = {
---     ScrollingFrame = nil
--- }
+local Embed = {
+    ScrollingFrame = nil
+}
 
--- Embed.new = function(xml)
---     local Data = XML:Parse(xml)
---     local EmbedData
---     print("Embed Debug")
---     for i, Tag in next, Data do
---         if Tag.Tag == "embed" then
---             local Color = Tag.Color or Tag.Colour
---             local Size = Tag.Size
-            
---             EmbedData = EmbedUI.new({color = type(Color) == "userdata" and Color or type(Color) == "table" and Color3.fromRGB(Color.R, Color.G, Color.B) or Color.fromRGB(155, 0, 0)})
+Embed.new = function(xml, ScrollingFrame)
+    ScrollingFrame = ScrollingFrame or Embed.ScrollingFrame
+    local Data = XML:Parse(xml)
+    local EmbedData
+    local Resize = true
 
---             local embed = EmbedData.instance
---             if Size then
---                 if Size[1] + 4 > Embed.ScrollingFrame.AbsoluteSize.Y then
---                     Size[1] = Embed.ScrollingFrame.AbsoluteSize.Y - 4
---                 end
+    for i, Tag in next, Data.Tags do
 
---                 if Size[2] + 4 > Embed.ScrollingFrame.AbsoluteSize.X then
---                     Size[2] = Embed.ScrollingFrame.AbsoluteSize.X - 4
---                 end
+        if Tag.Tag == "embed" then
+            local Color = Tag.Attributes.Color or Tag.Attributes.Colour
+            local Size = Tag.Attributes.Size
+            Resize = Tag.Attributes.Resize or Resize
 
---                 embed.Size = UDim2.new(unpack(Size))
---             end
---         end
---         if Tag.Tag == "textbutton" or Tag.Tag == "button" then
---             Interact.new({
---                 callback = Tag.Onclick and loadstring("return function() return " .. Tag.Onclick .. " end")() or function() end,
---                 parent = EmbedData.instance.content,
---                 order = #EmbedData.instance.content:GetChildren() + 1,
---                 type = "button",
---                 color = Tag.Color or Tag.Colour,
---                 text = Tag.Text
---             })
---         end
---         if Tag.Tag == "textlabel" or Tag.Tag == "label" then
---             Extra.new({
---                 type = "label",
---                 parent = EmbedData.instance.content,
---                 order = #EmbedData.instance.content:GetChildren() + 1,
---                 data = {
---                     color = Tag.Color or Tag.Colour,
---                     text = Tag.Text
---                 }
---             })
---         end
---     end
---     EmbedData:SetParent(Embed.ScrollingFrame)
--- end
+            EmbedData = EmbedUI.new({color = type(Color) == "userdata" and Color or type(Color) == "table" and Color3.fromRGB(Color.R, Color.G, Color.B) or Color3.fromRGB(155, 0, 0)})
 
--- return Embed
+            local embed = EmbedData.instance
+            embed.Size = Size or UDim2.new(0, 0, 0, 0)
+
+            -- if Size then
+                -- embed.Size = Size
+            -- end
+        end
+        if Tag.Tag == "textbutton" or Tag.Tag == "button" then
+            local Obj = Interact.new({
+                callback = Tag.Attributes.Onclick and loadstring("return " .. Tag.Attributes.Onclick)() or function() end,
+                parent = EmbedData.instance.content,
+                order = #EmbedData.instance.content:GetChildren() + 1,
+                type = "button",
+                color = Tag.Attributes.Color or Tag.Attributes.Colour,
+                text = Tag.Text
+            })
+
+            if Resize then
+                local ObjInstance = Obj.instance
+                local EmbedInstance = EmbedData.instance
+
+                if ObjInstance.AbsoluteSize.X + ObjInstance.AbsolutePosition.X + 4 > EmbedInstance.AbsoluteSize.X + EmbedInstance.AbsolutePosition.X - 4 then
+                    EmbedInstance.Size = EmbedInstance.Size + UDim2.new(0, (ObjInstance.AbsoluteSize.X + ObjInstance.AbsolutePosition.X + 4) - (EmbedInstance.AbsoluteSize.X + EmbedInstance.AbsolutePosition.X), 0, 0)
+                end
+
+                if ObjInstance.AbsoluteSize.Y + ObjInstance.AbsolutePosition.X + 4 > EmbedInstance.AbsoluteSize.X + EmbedInstance.AbsolutePosition.Y - 4 then
+                    EmbedInstance.Size = EmbedInstance.Size + UDim2.new(0, (ObjInstance.AbsoluteSize.Y + ObjInstance.AbsolutePosition.X + 4) - (EmbedInstance.AbsoluteSize.X + EmbedInstance.AbsolutePosition.X), 0, 0)
+                end
+            end
+        end
+        if Tag.Tag == "textlabel" or Tag.Tag == "label" then
+            local Obj = Extra.new({
+                type = "label",
+                parent = EmbedData.instance.content,
+                order = #EmbedData.instance.content:GetChildren() + 1,
+                data = {
+                    color = Tag.Attributes.Color or Tag.Attributes.Colour,
+                    content = Tag.Text,
+                    fontsize = Tag.Attributes.Fontsize
+                }
+            })
+            if Resize then
+                local ObjInstance = Obj.instance
+                local EmbedInstance = EmbedData.instance
+
+                if ObjInstance.AbsoluteSize.X + ObjInstance.AbsolutePosition.X + 4 > EmbedInstance.AbsoluteSize.X + EmbedInstance.AbsolutePosition.X - 4 then
+                    EmbedInstance.Size = EmbedInstance.Size + UDim2.new(0, (ObjInstance.AbsoluteSize.X + ObjInstance.AbsolutePosition.X + 4) - (EmbedInstance.AbsoluteSize.X + EmbedInstance.AbsolutePosition.X), 0, 0)
+                end
+            end
+        end
+        if Tag.Tag == "imagelabel" or Tag.Tag == "image" then
+            local Obj = Extra.new({
+                type = "imagelabel",
+                parent = EmbedData.instance.content,
+                order = #EmbedData.instance.content:GetChildren() + 1,
+                data = {
+                    color = Tag.Attributes.Color or Tag.Attributes.Colour,
+                    url = Tag.Attributes.Image or Tag.Attributes.Src or Tag.Attributes.Url
+                }
+            })
+
+            if Resize then
+                local ObjInstance = Obj.instance
+                local EmbedInstance = EmbedData.instance
+
+                if ObjInstance.AbsoluteSize.X + ObjInstance.AbsolutePosition.X + 4 > EmbedInstance.AbsoluteSize.X + EmbedInstance.AbsolutePosition.X - 4 then
+                    EmbedInstance.Size = EmbedInstance.Size + UDim2.new(0, (ObjInstance.AbsoluteSize.X + ObjInstance.AbsolutePosition.X + 4) - (EmbedInstance.AbsoluteSize.X + EmbedInstance.AbsolutePosition.X), 0, 0)
+                end
+            end
+        end
+    end
+    EmbedData:SetParent(ScrollingFrame)
+
+    return EmbedData
+end
+
+return Embed

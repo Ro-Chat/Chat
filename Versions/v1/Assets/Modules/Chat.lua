@@ -237,6 +237,7 @@ local Chat = {
 		if syn then
 			syn.protect_gui(ScreenGui)
 		end
+		 
 		ScreenGui.Parent = CoreGui
 		
 		local Position = UserInputService:GetMouseLocation()
@@ -595,8 +596,13 @@ local Chat = {
 		-- end)
 
 		ScrollingFrame.Visible = false
-		
-		return ScrollingFrame
+
+		data.ScrollingFrame = ScrollingFrame
+		data.Chat = function(Data)
+			return self:CreateMessage(Data, data.ScrollingFrame)
+		end
+
+		return data
 	end,
     CreateMessage = function(self, data, ScrollingFrame)
         ScrollingFrame = ScrollingFrame or self.ScrollingFrame
@@ -611,7 +617,7 @@ local Chat = {
 			self:CreateContextMenu(data, Position.X - 8, Position.Y - 38)
 		end)
 
-		if data.MessageId then 
+		if data.MessageId then
 			table.insert(self.Channels[self.CurrentChannel].Messages, {
 				From = data.Id,
 				Message = data.Message,
@@ -808,10 +814,47 @@ local Chat = {
     			Flags.Italic = false
     		end
     	end
-		return Frame
+
+		data.Frame = Frame
+		data.Flags = Flags
+			-- Frame = Frame,
+			-- Data = data,
+		data.Edit = function(Message)
+			Message = Message or data.Message
+			ROCHAT_Config.Client:Send({
+                Type = "UI",
+                SubType = "Edit",
+                Id = data.MessageId,
+                Message = Message,
+                Channel = data.Channel
+            })
+		end
+
+		data.Delete = function()
+			ROCHAT_Config.Client:Send({
+				Type = "UI",
+				SubType = "Destroy",
+				Id = data.MessageId,
+				Channel = data.Channel
+			})
+			data = nil
+		end
+
+		data.React = function(Reaction)
+			ROCHAT_Config.Client:Send({
+				Type = "UI",
+				SubType = "React",
+				Reaction = Reaction,
+				Id = data.MessageId,
+				Channel = data.Channel
+			})
+		end
+
+		return data
     end
 }
 
+Chat.Channel = Chat.CreateChannel
 Chat.Chat = Chat.CreateMessage
 Chat.React = Chat.CreateReaction
 

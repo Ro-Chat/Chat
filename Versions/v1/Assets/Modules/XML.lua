@@ -1,19 +1,56 @@
+local Identifiers = {
+    Table = "{",
+    Color = "Color",
+    UDim = "UDim",
+    Vector = "Vector",
+    Enum = "Enum",
+    CFrame = "CFrame",
+    BrickColor = "BrickColor",
+    Region = "Region",
+    Ray = "Ray",
+    Rect = "Rect",
+    Bool = "true|false"
+}
+
+
+
+local function checkString(value)
+    if not value:match("[%a%p]") then return "Number" end
+    
+    for Name, Identifier in next, Identifiers do
+        if Identifier:match("|") then
+            for _, Identifier in next, Identifier:split("|") do
+                if value:match(("^%s"):format(Identifier)) then
+                    return Name
+                end
+            end
+            
+        end
+
+        if value:match(("^%s"):format(Identifier)) then
+            return Name
+        end
+    end
+    
+    return "String"
+end
+
 local function get_attributes(str)
     local Data = {}
     if #str:split("=\"")>0 then
         for i = 2,#str:split("=\"") do
             if str:split("=\"")[i] then
                 local Property = str:split("=\"")[i-1]:split(" ")[#str:split("=\"")[i - 1]:split(" ")]
-                -- Property = Property:sub(1,1):upper() .. Property:sub(2, #Property)
-                local Value = str:split("=\"")[i]:split("\"")[1]
-            
-                local First = Value:sub(1, 1)
+                Property = Property:sub(1,1):upper() .. Property:sub(2, #Property) -- Capitalize it because why not
                 
-                if First ~= "{" or Value:match("%w") and not Value:lower() == "true" and not Value:lower() == "false" and not Value:sub(1, 6) == "Color3" and not Value:sub(1, 4) == "UDim" then
+                local Value = str:split("=\"")[i]:split("\"")[1]
+                local Type = checkString(Value)
+
+                if Type == "String" then
                     Value = "\"" .. Value .. "\""
                 end
-                
-                -- print(Value)
+
+                print(Type, Property, Value)
                 
                 Data[Property] = loadstring("return " .. Value)()
             end
@@ -122,6 +159,5 @@ local XML = {
         -- end
     end
 }
-
 
 return XML
