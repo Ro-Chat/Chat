@@ -14,9 +14,7 @@
 -- o888o  o888o `Y8bod8P'  `Y8bood8P'  o888o o888o `Y888""8o   "888"  --
 ------------------------------------------------------------------------
 
-assert(not ROCHAT_Config, "RoChat was already executed.")
-
-getgenv().ROCHAT_Config = {
+getgenv().ROCHAT_Config = ROCHAT_Config or {
     WSS = "wss://WS-Server.eeeeeevbr.repl.co",
     Version = "v1",
 }
