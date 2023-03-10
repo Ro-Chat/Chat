@@ -9,7 +9,6 @@ from hashlib import sha256
 
 CLIENTS = set()
 
-start_queue = []
 client_data = {}
 
 channels = {
@@ -33,9 +32,6 @@ channels = {
         "Messages": []
     }
 }
-
-message_logs = []
-
 
 def getExtras(message):
     ret = {
