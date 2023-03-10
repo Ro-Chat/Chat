@@ -18,47 +18,45 @@
 -- Version: 0.0.1  |                                                  --
 ------------------------------------------------------------------------
 
+local Status, Release = pcall(function() return debug.getinfo(2) end)
+Release = Status and Release
+
 local HttpService = game:GetService("HttpService")
 local Players     = game:GetService("Players")
 
 local Request = syn.request or http and request
-local Status, Release = pcall(function() return debug.getinfo(3) end)
 local Path    = Release and "https://raw.githubusercontent.com/Ro-Chat/Chat/main/" or "RoChat/"
 
-Release = Status and Release
+-- Directory Structure
 
-if not game:IsLoaded() then 
-    repeat task.wait() until game:IsLoaded()
-end
-
-if not isfolder("RoChat") then
-    local function makeDirectories(dirs)
+local function makeDirectories(dirs)
+    if not isfolder("RoChat") then
         makefolder("RoChat")
-        for _, subDir in next, dirs do
-            if isfolder("RoChat/" .. subDir) then continue end
-            makefolder("RoChat/" .. subDir)
-        end
     end
-
-    local subDirectories = Release and {"Profiles", "Emojis", "Plugins"} or {"Profiles", "Emojis", "Plugins", "Embeds", "Server", "Versions"}
-
-    makeDirectories(subDirectories)
+    for _, subDir in next, dirs do
+        if isfolder("RoChat/" .. subDir) then continue end
+        makefolder("RoChat/" .. subDir)
+    end
 end
+
+local subDirectories = Release and {"Profiles", "Emojis", "Plugins"} or {"Profiles", "Emojis", "Plugins", "Embeds", "Server", "Versions"}
+
+makeDirectories(subDirectories)
 
 local profilePath = ("RoChat/Profiles/%s_profile.json"):format(ROCHAT_Config.Version)
 local versionPath = ("RoChat/Versions/%s"):format(ROCHAT_Config.Version)
 
+local function makeTemplate(template, vars)
+    for Key, Value in next, vars do
+        template = template:gsub(("__%s__"):format(Key:upper()), tostring(Value))
+    end
+    
+    return template
+end
+
 if isfile(profilePath) then
     ROCHAT_Config.Profile = HttpService:JSONDecode(readfile(profilePath))
 else
-    local function makeTemplate(template, vars)
-        for Key, Value in next, vars do
-            template = template:gsub(("__%s__"):format(Key:upper()), tostring(Value))
-        end
-
-        return template
-    end
-    
     local profileTemplate = ("%s/Assets/Templates/Profile.json"):format(versionPath)
     
     if isfile(profileTemplate) then
